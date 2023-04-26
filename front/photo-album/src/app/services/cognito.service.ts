@@ -1,0 +1,55 @@
+import { Injectable } from '@angular/core';
+import { Amplify, Auth } from 'aws-amplify';
+import { environment } from 'src/environments/environment';
+import { User } from '../models/user';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CognitoService {
+
+  constructor() {
+    Amplify.configure({
+      Auth: environment.cognito
+    })
+  }
+
+  public signUp(user: User): Promise<any> {
+    return Auth.signUp({
+      username: user.username,
+      password: user.password,
+      attributes: {
+        email: user.email,
+        given_name: user.givenName,
+        family_name: user.familyName,
+        birthdate: user.birthDate
+      }
+    })
+  }
+
+  public confirmSignUp(user: User): Promise<any> {
+    return Auth.confirmSignUp(user.username, user.code);
+  }
+
+  // if user is logged
+  public getUser(): Promise<any> {
+    return Auth.currentUserInfo();
+  }
+
+  public logIn(user: User): Promise<any> {
+    console.log("dsdss");
+    return Auth.signIn(user.username, user.password);
+  }
+
+  public signOut(): Promise<any> {
+    return Auth.signOut();
+  }
+
+  public forgotPassowrd(user: User): Promise<any> {
+    return Auth.forgotPassword(user.username);
+  }
+
+  public forgotPassowrdSubmit(user: User, newPassword: string): Promise<any> {
+    return Auth.forgotPasswordSubmit(user.username, user.code, newPassword);
+  }
+}

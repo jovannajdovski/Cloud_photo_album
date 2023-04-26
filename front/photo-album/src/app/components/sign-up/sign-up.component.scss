@@ -1,0 +1,62 @@
+.header h4{
+    margin-top: 10px;
+    font-weight: normal;
+    font-size: 14px;
+    color: rgba(0,0,0,0.4);
+}
+
+.form{
+    display: flex;
+    flex-direction: column;
+}
+
+.form p {
+    text-align: right;
+}
+
+.form p a {
+    color: #000;
+    font-size: 14px;
+}
+
+.form>input{
+    height: 46px;
+    padding: 0 16px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    outline: 0;
+    margin-top: 20px;
+}
+
+.form>input:focus{
+    border-color: black;
+}
+
+.form button{
+    padding: 12px 10px;
+    border: 0;
+    background: black;
+    border-radius: 3px;
+    margin-top: 10px;
+    color: #fff;
+    letter-spacing: 1px;
+    cursor: pointer;
+}
+
+.auth-box{
+    background-color: white;
+    padding: 48px 56px;
+    border: 2px solid black;
+    box-shadow: rgba(17,12,46,0.15) 0px 48px 100px 0px;
+}
+
+
+
+.show-pass{
+    font-size: 12px;
+    margin: 8px 0;
+}
+
+#ver-email{
+    color: green;
+}
