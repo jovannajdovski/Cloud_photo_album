@@ -2,7 +2,7 @@
     margin-top: 10px;
     font-weight: normal;
     font-size: 14px;
-    color: rgba(0,0,0,0.4);
+    color: #00dba4;
 }
 
 .form{
@@ -15,7 +15,7 @@
 }
 
 .form p a {
-    color: #000;
+    color: #00dba4;
     font-size: 14px;
 }
 
@@ -29,13 +29,13 @@
 }
 
 .form>input:focus{
-    border-color: black;
+    border-color: #00dba4;
 }
 
 .form button{
     padding: 12px 10px;
     border: 0;
-    background: black;
+    background: #00dba4;
     border-radius: 3px;
     margin-top: 10px;
     color: #fff;
@@ -46,8 +46,8 @@
 .auth-box{
     background-color: white;
     padding: 48px 56px;
-    border: 2px solid black;
-    box-shadow: rgba(17,12,46,0.15) 0px 48px 100px 0px;
+    border: 2px solid #00dba4;
+    box-shadow: rgba(0, 219, 164,0.15) 0px 48px 100px 0px;
 }
 
 
@@ -60,4 +60,10 @@
 .show-pass-forgot{
     font-size: 12px;
     margin: 8px 0;
+}
+
+.forgot-password:hover{
+    color: #00af83;
+    transform: translateY(-2px);
+    cursor: pointer;
 }

@@ -24,11 +24,10 @@ export class LogInComponent implements OnInit {
   }
 
   logInWithCognito() {
-    console.log(this.user.username);
-    console.log(this.user.password);
     if (this.user && this.user.username && this.user.password) {
       this.cognitoService.logIn(this.user)
         .then(() => {
+          this.cognitoService.setUser(true);
           this.router.navigate(['/']);
         })
         .catch((error: any) => {

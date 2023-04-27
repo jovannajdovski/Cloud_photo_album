@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Amplify, Auth } from 'aws-amplify';
 import { environment } from 'src/environments/environment';
 import { User } from '../models/user';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,13 @@ export class CognitoService {
     Amplify.configure({
       Auth: environment.cognito
     })
+  }
+
+  user$ = new BehaviorSubject(false);
+  userState$ = this.user$.asObservable();
+
+  setUser(isLogged:boolean): void {
+    this.user$.next(isLogged);
   }
 
   public signUp(user: User): Promise<any> {
@@ -37,7 +45,6 @@ export class CognitoService {
   }
 
   public logIn(user: User): Promise<any> {
-    console.log("dsdss");
     return Auth.signIn(user.username, user.password);
   }
 
