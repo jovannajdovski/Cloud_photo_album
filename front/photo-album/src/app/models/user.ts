@@ -8,3 +8,9 @@ export interface User {
     code: string;
     showPassword: boolean;
 }
+
+
+export interface ContentSection {
+    name: string;
+    updated: Date;
+  }
