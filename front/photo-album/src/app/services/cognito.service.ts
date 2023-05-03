@@ -3,12 +3,15 @@ import { Amplify, Auth } from 'aws-amplify';
 import { environment } from 'src/environments/environment';
 import { User } from '../models/user';
 import { BehaviorSubject } from 'rxjs';
+import {AuthenticationDetails, CognitoUser, CognitoUserPool} from 'amazon-cognito-identity-js';
 
+const userPool=new CognitoUserPool(environment.poolData);
 @Injectable({
   providedIn: 'root'
 })
 export class CognitoService {
 
+  
   constructor() {
     Amplify.configure({
       Auth: environment.cognito
@@ -43,6 +46,9 @@ export class CognitoService {
   public getUser(): Promise<any> {
     return Auth.currentUserInfo();
   }
+  public getAuthenticatedUser(){
+    return userPool.getCurrentUser();
+  }
 
   public logIn(user: User): Promise<any> {
     return Auth.signIn(user.username, user.password);
@@ -59,4 +65,8 @@ export class CognitoService {
   public forgotPassowrdSubmit(user: User, newPassword: string): Promise<any> {
     return Auth.forgotPasswordSubmit(user.username, user.code, newPassword);
   }
+  public getAuthToken(){
+    return Auth.currentSession()
+ 
+   }
 }

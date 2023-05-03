@@ -1,7 +1,9 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
+import { Observable } from 'rxjs';
+import { UploadService } from 'src/app/services/upload.service';
 
 @Component({
   selector: 'app-add-content-dialog',
@@ -19,31 +21,47 @@ export class AddContentDialogComponent implements OnInit {
     description: new FormControl('', [Validators.pattern(this.allTextPattern), Validators.required]),
     tag: new FormControl('', [Validators.pattern(this.allTextPattern)]),
   });
-
+  name="";
+  type:string="";
+  size=0;
+  createTime=0;
+  editTime=0;
+  data="";
   createError = false;
-  constructor(private dialogRef: MatDialogRef<AddContentDialogComponent>,) { }
+  constructor(private dialogRef: MatDialogRef<AddContentDialogComponent>, private uploadService:UploadService) { }
 
   ngOnInit(): void {
   }
 
-  onFileChange(event: Event) {
-			// if( this.files && this.files.length > 1 )
-			// 	fileName = ( this.getAttribute( 'data-multiple-caption' ) || '' ).replace( '{count}', this.files.length );
-			// else
-			// 	fileName = e.target.value.split( '\\' ).pop();
-
-			// if( fileName )
-			// 	label.querySelector( 'span' ).innerHTML = fileName;
-			// else
-			// 	label.innerHTML = labelVal;
-		
-
+  async onFileChange(event: Event) {
     if (event!=null && event.target!=null)
     {
       const target= event.target as HTMLInputElement;
       if (target.files!=null && target.files.length > 0) {
-        this.fileName = target.value.split('\\').pop();
         const file = target.files[0];
+        this.fileName=file.name.split("\\").pop()
+        
+        
+        this.type=(this.fileName||"ime").split('.')[1]||"";
+        this.size=file.size;
+        this.createTime=Date.now();
+        this.editTime=this.createTime;
+        
+        try {
+          this.data = await toBase64(file);
+          this.data=this.data.split(',')[1];
+        } catch(error) {
+            console.error(error);
+            return;
+        }
+        
+        // const reader = new FileReader();
+        // reader.readAsDataURL(file);
+        // reader.onload = () => {
+        //   this.data = reader.result.toString().split(',')[1];
+        // };
+       
+
         // this.addContentForm.patchValue({
         //   file: file
        // });
@@ -54,6 +72,8 @@ export class AddContentDialogComponent implements OnInit {
     }
 
   }
+
+ 
 
   // submit(){
   //   const formData = new FormData();
@@ -66,25 +86,28 @@ export class AddContentDialogComponent implements OnInit {
   //     })
   // }
 
-  addContent() {
-    const metadata = {
-      name: this.addContentForm.value.name,
-      // :TODO add metadata from file
-      // type:"png",
-      // size: "3423kb",
-      // createTime:"1.1.2020.",
-      // editTime:"1.1.2020.",
-      description: this.addContentForm.value.description,
-      tag: this.addContentForm.value.tag
-    }
+  async addContent() {
 
     if (this.addContentForm.valid) {
-      //    this.storeContent(metadata, this.addContentForm.value.file)
+      var file={"name":this.addContentForm.value.name, "size":this.size,"type":this.type,
+              "createTime":this.createTime, "editTime":this.editTime,
+            "description":this.addContentForm.value.description,"tag":this.addContentForm.value.tag,"data":this.data};
+    
+      (await this.uploadService.sendToApiGateway(file)).subscribe({
+        next: (result) => {
+          console.log(result)
+        },
+        error: (error) => {
+          console.error(error);
+        },
+      });
+
     }
 
 //delete this after
     this.dialogRef.close("success");
   }
+  
 
   // :TODO make storeService
 
@@ -116,4 +139,9 @@ export class AddContentDialogComponent implements OnInit {
   // }
 }
 
-
+const toBase64 = (file: any) => new Promise<any>((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+});

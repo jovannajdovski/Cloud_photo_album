@@ -9,6 +9,10 @@ export const environment = {
     // userPoolWebClientId : '1du0ehpveg5ksb7902704dhv0'
     userPoolId: 'eu-central-1_IHn69bILn',
     userPoolWebClientId : '5o5n8tvqd8f6nt7qifbjchcdk'
+  },
+  poolData : {
+    UserPoolId: 'eu-central-1_IHn69bILn', // Your user pool id here
+    ClientId: '5o5n8tvqd8f6nt7qifbjchcdk' // Your client id here
   }
 };
 
