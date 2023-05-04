@@ -3,13 +3,25 @@ import { Amplify, Auth } from 'aws-amplify';
 import { environment } from 'src/environments/environment';
 import { User } from '../models/user';
 import { BehaviorSubject } from 'rxjs';
+import {AuthenticationDetails, CognitoUser, CognitoUserPool} from 'amazon-cognito-identity-js';
+import { HttpHeaders } from '@angular/common/http';
 
+const userPool=new CognitoUserPool(environment.poolData);
 @Injectable({
   providedIn: 'root'
 })
 export class CognitoService {
 
+  public session:any;
+  loggedIn:boolean;
+
+  private headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    skip: 'true',
+  });
+  
   constructor() {
+    this.loggedIn=false;
     Amplify.configure({
       Auth: environment.cognito
     })
@@ -19,6 +31,7 @@ export class CognitoService {
   userState$ = this.user$.asObservable();
 
   setUser(isLogged:boolean): void {
+    this.loggedIn = isLogged;
     this.user$.next(isLogged);
   }
 
@@ -44,6 +57,14 @@ export class CognitoService {
     return Auth.currentUserInfo();
   }
 
+  public getSession(){
+    return Auth.currentSession();
+  }
+
+  public getAuthenticatedUser(){
+    return userPool.getCurrentUser();
+  }
+
   public logIn(user: User): Promise<any> {
     return Auth.signIn(user.username, user.password);
   }
@@ -58,5 +79,10 @@ export class CognitoService {
 
   public forgotPassowrdSubmit(user: User, newPassword: string): Promise<any> {
     return Auth.forgotPasswordSubmit(user.username, user.code, newPassword);
+  }
+
+
+  public isLoggedIn(): boolean {
+    return this.loggedIn;
   }
 }

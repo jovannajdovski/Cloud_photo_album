@@ -24,10 +24,13 @@ export class LogInComponent implements OnInit {
   }
 
   logInWithCognito() {
+    console.log(this.cognitoService.isLoggedIn());
     if (this.user && this.user.username && this.user.password) {
       this.cognitoService.logIn(this.user)
         .then(() => {
           this.cognitoService.setUser(true);
+          
+          this.setSession();
           this.router.navigate(['/']);
         })
         .catch((error: any) => {
@@ -72,5 +75,19 @@ export class LogInComponent implements OnInit {
     else {
       this.displayAlert("Please enter a valid input");
     }
+  }
+
+  public setSession(){
+    this.cognitoService.getSession()
+    .then((session:any) => {
+      if(session){
+        //logged in      
+        const token = session.idToken.jwtToken;
+        this.cognitoService.session = token;
+      }
+      else{
+        console.log("error");
+      }
+    })
   }
 }
