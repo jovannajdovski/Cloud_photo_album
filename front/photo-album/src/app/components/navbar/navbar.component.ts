@@ -21,21 +21,6 @@ export class NavbarComponent implements OnInit {
     this.cognitoService.userState$.subscribe((result) => {
       this.isLogged = result;
     });
-    // this.cognitoService.setUser();
-  //  this.getUserDetails();
-  }
-
-  public getUserDetails() {
-    this.cognitoService.getUser()
-      .then((user: any) => {
-        if (user) {
-          //logged in
-          console.log(user);
-        }
-        else {
-          this.router.navigate(['/log-in']);
-        }
-      })
   }
 
   public signOutWithCognito() {
@@ -45,7 +30,6 @@ export class NavbarComponent implements OnInit {
         this.router.navigate(['/log-in']);
       })
   }
-
 
   public addContent() {
     this.openAddContentDialog();
@@ -58,6 +42,8 @@ export class NavbarComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result: string) => {
       if (result == "success") {
         this.openSnackBar("Content added successfully");
+      } else {
+        this.openSnackBar("Error in the process");
       }
     });
   }

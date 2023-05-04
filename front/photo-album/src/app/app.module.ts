@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LogInComponent } from './components/log-in/log-in.component';
@@ -12,9 +12,8 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material/material.module';
 import { AddContentDialogComponent } from './components/add-content-dialog/add-content-dialog.component'
-import {Amplify} from 'aws-amplify';
-// import awsconfig from '../aws-exports.js';
-// Amplify.configure(awsconfig);
+import { AuthInterceptor } from './interceptor/auth-interceptor.interceptor';
+
 
 @NgModule({
   declarations: [
@@ -35,7 +34,13 @@ import {Amplify} from 'aws-amplify';
     MaterialModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [
+    {
+    provide : HTTP_INTERCEPTORS,
+    useClass: AuthInterceptor,
+    multi   : true,
+  }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
