@@ -13,6 +13,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material/material.module';
 import { AddContentDialogComponent } from './components/add-content-dialog/add-content-dialog.component'
 import { AuthInterceptor } from './interceptor/auth-interceptor.interceptor';
+import { AlbumNameDialogComponent } from './components/album-name-dialog/album-name-dialog.component';
 
 
 @NgModule({
@@ -23,7 +24,8 @@ import { AuthInterceptor } from './interceptor/auth-interceptor.interceptor';
     SuccOrFailMessageComponent,
     HomeComponent,
     NavbarComponent,
-    AddContentDialogComponent
+    AddContentDialogComponent,
+    AlbumNameDialogComponent
   ],
   imports: [
     BrowserModule,
