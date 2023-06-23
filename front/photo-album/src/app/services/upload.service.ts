@@ -10,7 +10,7 @@ import { CognitoService } from './cognito.service';
 })
 export class UploadService {
 
-  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) { 
+  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) {
     Amplify.configure({
       Auth: environment.cognito
     })
@@ -24,8 +24,8 @@ export class UploadService {
       'Content-Type': 'application/json',
       'Authorization': token,
     });
-    
-    return this.httpClient.post('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/file',file,{headers:header});
+
+    return this.httpClient.post('http://127.0.0.1:3000/dev/file',file,{headers:header});
 
   }
 

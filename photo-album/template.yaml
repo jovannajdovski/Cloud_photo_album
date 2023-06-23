@@ -1,0 +1,200 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    photo-album
+    
+    Sample SAM Template for photo-album
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+    Function:
+        Timeout: 3
+        MemorySize: 128
+
+Resources:
+    PhotoMetadataTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: photo-metadata
+            AttributeDefinitions:
+                -   AttributeName: id
+                    AttributeType: S
+            KeySchema:
+                -   AttributeName: id
+                    KeyType: HASH
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
+            BillingMode: PROVISIONED
+
+    PhotoBucket:
+        Type: AWS::S3::Bucket
+
+    WritePhotoFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_file_s3/
+            Handler: write_file_s3.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+
+
+
+    WriteMetadataFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_metadata_ddb/
+            Handler: write_metadata_ddb.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TebleName: !Ref PhotoMetadataTable
+                    BucketName: !Ref PhotoBucket
+
+    InitialUploadFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: initial_upload/
+            Handler: initial_upload_handler.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonDynamoDBFullAccess
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /file
+                        Method: POST
+                        RestApiId: !Ref MyApi
+            Environment:
+                Variables:
+                    TopicName: !Ref PhotoUploadTopic
+
+
+    PhotoUploadTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            DisplayName: photo_upload
+
+    WritePhotoS3Subscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref PhotoUploadTopic
+            Protocol: lambda
+            Endpoint: !GetAtt WritePhotoFunction.Arn
+
+    WriteMetadataSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref PhotoUploadTopic
+            Protocol: lambda
+            Endpoint: !GetAtt WriteMetadataFunction.Arn
+
+
+    #TODO API
+    PhotoAlbumUsersPool:
+        Type: AWS::Cognito::UserPool
+        Properties:
+            UserPoolName: photo-album-users-pool
+            AutoVerifiedAttributes:
+                - email
+            AccountRecoverySetting:
+                RecoveryMechanisms:
+                    -   Name: verified_email
+                        Priority: 1
+            VerificationMessageTemplate:
+                DefaultEmailOption: CONFIRM_WITH_CODE
+            AdminCreateUserConfig:
+                AllowAdminCreateUserOnly: false
+            EmailConfiguration:
+                EmailSendingAccount: COGNITO_DEFAULT
+            Policies:
+                PasswordPolicy:
+                    MinimumLength: 8
+                    RequireLowercase: true
+                    RequireNumbers: true
+                    RequireSymbols: true
+                    RequireUppercase: true
+            Schema:
+                -   Name: given_name
+                    AttributeDataType: String
+                    Mutable: true
+                    Required: true
+                -   Name: family_name
+                    AttributeDataType: String
+                    Mutable: true
+                    Required: true
+                -   Name: email
+                    AttributeDataType: String
+                    Mutable: true
+                    Required: true
+                -   Name: birthdate
+                    AttributeDataType: String
+                    Mutable: true
+                    Required: true
+            MfaConfiguration: 'OFF'
+            UsernameConfiguration:
+                CaseSensitive: false
+            UsernameAttributes:
+                - email
+
+
+    PhotoAlbumUsersPoolClient:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            UserPoolId: !Ref PhotoAlbumUsersPool
+            ClientName: photo-album-users-pool-client
+            GenerateSecret: false
+
+
+    MyApi:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: Dev
+            Cors:
+                AllowMethods: "'GET,PUT,POST,DELETE,OPTIONS'"
+                AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                AllowOrigin: "'*'"
+            Auth:
+                DefaultAuthorizer: MyCognitoAuthorizer
+                Authorizers:
+                    MyCognitoAuthorizer:
+                        UserPoolArn: !GetAtt PhotoAlbumUsersPool.Arn
+                        Identity:
+                            Header: Authorization
+
+
+
+    ApplicationResourceGroup:
+        Type: AWS::ResourceGroups::Group
+        Properties:
+            Name:
+                Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+            ResourceQuery:
+                Type: CLOUDFORMATION_STACK_1_0
+    ApplicationInsightsMonitoring:
+        Type: AWS::ApplicationInsights::Application
+        Properties:
+            ResourceGroupName:
+                Ref: ApplicationResourceGroup
+            AutoConfigurationEnabled: 'true'
+Outputs:
+    # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+    # Find out more about other implicit resources you can reference within SAM
+    # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+    InitialUploadFunction:
+        Description: Initial upload handler
+        Value: !GetAtt InitialUploadFunction.Arn
+
