@@ -163,10 +163,6 @@ Resources:
         Type: AWS::Serverless::Api
         Properties:
             StageName: Dev
-            Cors:
-                AllowMethods: "'GET,PUT,POST,DELETE,OPTIONS'"
-                AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-                AllowOrigin: "'*'"
             Auth:
                 DefaultAuthorizer: MyCognitoAuthorizer
                 Authorizers:
@@ -174,6 +170,10 @@ Resources:
                         UserPoolArn: !GetAtt PhotoAlbumUsersPool.Arn
                         Identity:
                             Header: Authorization
+            Cors:
+                AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+                AllowHeaders: "'content-type,Access-Control-Allow-Origin'"
+                AllowOrigin: "'*'"
 
 
 
