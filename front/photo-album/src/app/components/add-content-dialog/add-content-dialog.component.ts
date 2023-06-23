@@ -55,88 +55,43 @@ export class AddContentDialogComponent implements OnInit {
             return;
         }
         
-        // const reader = new FileReader();
-        // reader.readAsDataURL(file);
-        // reader.onload = () => {
-        //   this.data = reader.result.toString().split(',')[1];
-        // };
-       
-
-        // this.addContentForm.patchValue({
-        //   file: file
-       // });
       } else {
         this.fileName = '';
       }
-
     }
 
   }
 
- 
 
-  // submit(){
-  //   const formData = new FormData();
-  //   formData.append('file', this.myForm.get('fileSource').value);
-
-  //   this.http.post('http://localhost:', formData)
-  //     .subscribe(res => {
-  //       console.log(res);
-  //       alert('Uploaded Successfully.');
-  //     })
-  // }
-
-  async addContent() {
-
+  addContent() {
     if (this.addContentForm.valid) {
-      var file={"name":this.addContentForm.value.name, "size":this.size,"type":this.type,
-              "createTime":this.createTime, "editTime":this.editTime,
-            "description":this.addContentForm.value.description,"tag":this.addContentForm.value.tag,"data":this.data};
+      var file={
+        "name":this.addContentForm.value.name,
+        "size":this.size,"type":this.type,
+        "createTime":this.createTime,
+        "editTime":this.editTime,
+        "description":this.addContentForm.value.description,
+        "tag":this.addContentForm.value.tag,
+        "data":this.data
+      };
     
-      (await this.uploadService.sendToApiGateway(file)).subscribe({
+      this.uploadService.uploadFile(file).subscribe({
         next: (result) => {
-          console.log(result)
+          console.log(result);
+          this.createError = false;
         },
         error: (error) => {
           console.error(error);
+          this.createError = true;
+          this.dialogRef.close("error");
         },
       });
 
     }
 
-//delete this after
     this.dialogRef.close("success");
   }
   
-
-  // :TODO make storeService
-
-  // storeContent(metadata: any, file: any) {
-  //   this.storeService.storeContentToS3(file).subscribe({
-  //     next: () => {
-  //       this.addMetadata(metadata);
-  //     },
-  //     error: (error:any) => {
-  //       if (error instanceof HttpErrorResponse) {
-  //         this.createError = true;
-  //       }
-  //     },
-  //   });
-  // }
-
-  // addMetadata(metadata:any) {
-  //   this.storeService.addMetadataToDynamoDB(metadata).subscribe({
-  //     next: () => {
-  //       this.dialogRef.close("success");
-  //     },
-  //     error: (error:any) => {
-  //       if (error instanceof HttpErrorResponse) {
-  //         console.log(error);
-  //         this.createError = true;
-  //       }
-  //     },
-  //   });
-  // }
 }
 
 const toBase64 = (file: any) => new Promise<any>((resolve, reject) => {

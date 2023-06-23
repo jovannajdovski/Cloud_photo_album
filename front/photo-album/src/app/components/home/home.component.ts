@@ -52,7 +52,7 @@ export class HomeComponent implements OnInit {
   }
 
   public getUserDetails(){
-    this.cognitoService.getUser()
+    this.cognitoService.getSession()
     .then((user:any) => {
       if(user){
         this.username=user.username;
@@ -62,6 +62,7 @@ export class HomeComponent implements OnInit {
         this.router.navigate(['/log-in']);
       }
     })
+    console.log(this.cognitoService.isLoggedIn());
   }
 
   public signOutWithCognito(){

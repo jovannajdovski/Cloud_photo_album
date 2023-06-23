@@ -4,6 +4,7 @@ import { environment } from 'src/environments/environment';
 import { User } from '../models/user';
 import { BehaviorSubject } from 'rxjs';
 import {AuthenticationDetails, CognitoUser, CognitoUserPool} from 'amazon-cognito-identity-js';
+import { HttpHeaders } from '@angular/common/http';
 
 const userPool=new CognitoUserPool(environment.poolData);
 @Injectable({
@@ -11,8 +12,16 @@ const userPool=new CognitoUserPool(environment.poolData);
 })
 export class CognitoService {
 
+  public session:any;
+  loggedIn:boolean;
+
+  private headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    skip: 'true',
+  });
   
   constructor() {
+    this.loggedIn=false;
     Amplify.configure({
       Auth: environment.cognito
     })
@@ -22,6 +31,7 @@ export class CognitoService {
   userState$ = this.user$.asObservable();
 
   setUser(isLogged:boolean): void {
+    this.loggedIn = isLogged;
     this.user$.next(isLogged);
   }
 
@@ -46,6 +56,11 @@ export class CognitoService {
   public getUser(): Promise<any> {
     return Auth.currentUserInfo();
   }
+
+  public getSession(){
+    return Auth.currentSession();
+  }
+
   public getAuthenticatedUser(){
     return userPool.getCurrentUser();
   }
@@ -65,8 +80,9 @@ export class CognitoService {
   public forgotPassowrdSubmit(user: User, newPassword: string): Promise<any> {
     return Auth.forgotPasswordSubmit(user.username, user.code, newPassword);
   }
-  public getAuthToken(){
-    return Auth.currentSession()
- 
-   }
+
+
+  public isLoggedIn(): boolean {
+    return this.loggedIn;
+  }
 }
