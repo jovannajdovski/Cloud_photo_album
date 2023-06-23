@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ContentSection } from 'src/app/models/user';
 import { CognitoService } from 'src/app/services/cognito.service';
+import { DeleteService } from 'src/app/services/delete.service';
+import { EditContentDialogComponent } from '../edit-content-dialog/edit-content-dialog.component';
 
 @Component({
   selector: 'app-home',
@@ -38,8 +42,10 @@ export class HomeComponent implements OnInit {
     },
   ];
 
-
-  constructor(private router:Router, private cognitoService:CognitoService) { }
+  username=""
+  constructor(private router:Router, private cognitoService:CognitoService,
+     private deleteService:DeleteService, private _snackBar: MatSnackBar,
+     private dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.getUserDetails();
@@ -49,7 +55,7 @@ export class HomeComponent implements OnInit {
     this.cognitoService.getUser()
     .then((user:any) => {
       if(user){
-        //logged in
+        this.username=user.username;
         console.log(user);
       }
       else{
@@ -64,5 +70,43 @@ export class HomeComponent implements OnInit {
       this.cognitoService.setUser(false);
       this.router.navigate(['/log-in']);
     })
+  }
+  public edit_file(file: any)
+  {
+    console.log("addContentDialogOpen");
+    const dialogData = {
+      name: file.name,
+      tag: 'value2',
+      description: 'value3',
+      user: 'user',
+      file_path: 'file_path'
+    };
+  
+    const dialogRef = this.dialog.open(EditContentDialogComponent, {
+      data: dialogData,
+    });
+
+    dialogRef.afterClosed().subscribe((result: string) => {
+      if (result == "success") {
+        this.openSnackBar("Content added successfully");
+      }
+    });
+  }
+  async remove_file(file: any)
+  {
+    var file_path='file_path'+file.name;
+    (await this.deleteService.sendToApiGateway(file_path, this.username)).subscribe({
+      next: (result) => {
+        console.log(result)
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+  openSnackBar = (message: string) => {
+    this._snackBar.open(message, "OK", {
+      duration: 3000
+    });
   }
 }

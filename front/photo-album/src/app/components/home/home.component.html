@@ -84,7 +84,7 @@
             <mat-icon>visibility</mat-icon>
             <span>View Content</span>
           </button>
-          <button mat-menu-item>
+          <button (click)="edit_file(file)" mat-menu-item>
             <mat-icon>edit</mat-icon>
             <span>Edit</span>
           </button>
@@ -100,7 +100,7 @@
             <mat-icon>redo</mat-icon>
             <span>Move to other album</span>
           </button>
-          <button mat-menu-item>
+          <button (click)="remove_file(file)" mat-menu-item>
             <mat-icon>delete</mat-icon>
             <span>Remove</span>
           </button>

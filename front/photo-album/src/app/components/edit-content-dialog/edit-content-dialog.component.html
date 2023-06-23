@@ -1,0 +1,47 @@
+<div class="content" id="addFileContent">
+
+    <form [formGroup]="editContentForm" id="editContent" (ngSubmit)="editContent()">
+
+     
+
+        <mat-form-field class="field" appearance="outline">
+            <mat-label>Name</mat-label>
+            <input matInput type="text" placeholder="Name" name="name" formControlName="name">
+            <mat-error *ngIf="editContentForm.get('name')?.invalid && editContentForm.get('name')?.touched">
+                <span *ngIf="editContentForm.get('name')?.errors?.['pattern']" class="input-error">Not valid
+                    format</span>
+                <span *ngIf="editContentForm.get('name')?.errors?.['required']" class="input-error">Field is
+                    required</span>
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="field" appearance="outline">
+            <mat-label>Description</mat-label>
+            <input matInput type="text" placeholder="Description" name="description" formControlName="description">
+            <mat-error *ngIf="editContentForm.get('description')?.invalid && editContentForm.get('description')?.touched">
+                <span *ngIf="editContentForm.get('description')?.errors?.['pattern']" class="input-error">Not valid
+                    format</span>
+                <span *ngIf="editContentForm.get('description')?.errors?.['required']" class="input-error">Field is
+                    required</span>
+            </mat-error>
+        </mat-form-field>
+
+
+        <mat-form-field appearance="outline" class="field">
+            <mat-label>Tag</mat-label>
+            <input matInput type="text" placeholder="tag" name="tag" formControlName="tag">
+            <mat-error *ngIf="editContentForm.get('tag')?.invalid && editContentForm.get('tag')?.touched">
+                <span *ngIf="editContentForm.get('tag')?.errors?.['tag']" class="input-error">Tag must be in correct
+                    format</span>
+            </mat-error>
+        </mat-form-field>
+
+
+        <mat-error *ngIf="createError" class="content-error-container">
+            <span class="content-error">Create error</span>
+        </mat-error>
+
+        <button type="submit" class="btn" [disabled]="!editContentForm.valid">EDIT</button>
+    </form>
+
+</div>
