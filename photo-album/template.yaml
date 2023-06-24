@@ -105,6 +105,31 @@ Resources:
                         Destination:
                             Ref: PhotoUploadTopic
 
+
+    CreateAlbumFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/create_album/
+            Handler: create_album.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonS3FullAccess
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /album
+                        Method: POST
+                        RestApiId: !Ref MyApi
+
+
+
     MyLambdaExecutionRole:
         Type: AWS::IAM::Role
         Properties:
