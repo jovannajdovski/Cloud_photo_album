@@ -27,6 +27,21 @@ Resources:
                 WriteCapacityUnits: 5
             BillingMode: PROVISIONED
 
+    SharingTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: photo-sharing
+            AttributeDefinitions:
+                -   AttributeName: id
+                    AttributeType: S
+            KeySchema:
+                -   AttributeName: id
+                    KeyType: HASH
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
+            BillingMode: PROVISIONED
+
     PhotoBucket:
         Type: AWS::S3::Bucket
 
@@ -150,7 +165,7 @@ Resources:
                         Method: GET
                         RestApiId: !Ref MyApi
                         RequestParameters:
-                            -  method.request.querystring.prefix:
+                            -   method.request.querystring.prefix:
                                     Required: true
 
     InitialAlbumDeleteFunction:
@@ -162,9 +177,9 @@ Resources:
             Architectures:
                 - x86_64
             Policies:
-            - AmazonSNSFullAccess
-            - AmazonS3FullAccess
-            - AWSLambdaBasicExecutionRole
+                - AmazonSNSFullAccess
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
             Events:
                 ApiEvent:
                     Type: Api
@@ -234,6 +249,131 @@ Resources:
                     Properties:
                         Topic: !Ref AlbumDeleteTopic
 
+    GetUsersSharingFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: sharing/users/get
+            Handler: get_users_shared.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref SharingTable
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /sharing/users
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.user:
+                                    Required: true
+
+
+    GetSharingFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: sharing/get_shared_content/
+            Handler: get_shared_content.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref SharingTable
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /sharing
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.user:
+                                    Required: true
+
+
+    ShareContentFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: sharing/share_content/
+            Handler: share_content.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref SharingTable
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /sharing
+                        Method: POST
+                        RestApiId: !Ref MyApi
+
+
+    RemoveSharingFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: sharing/remove/
+            Handler: remove.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref SharingTable
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /sharing
+                        Method: DELETE
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.user:
+                                    Required: true
+                            -   method.request.querystring.shared_content_to_remove:
+                                    Required: true
+
+
+
+    GetUsersFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: users/get/
+            Handler: get.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonCognitoReadOnly
+            Environment:
+                Variables:
+                    UserPoolId: !Ref PhotoAlbumUsersPool
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /users
+                        Method: GET
+                        RestApiId: !Ref MyApi
 
     MyLambdaExecutionRole:
         Type: AWS::IAM::Role

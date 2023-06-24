@@ -56,11 +56,11 @@ export class HomeComponent implements OnInit {
 
 
   constructor(private router: Router,
-    private cognitoService: CognitoService,
-    private sharingService: SharingService,
-    private albumServie: AlbumService,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog) { }
+              private cognitoService: CognitoService,
+              private sharingService: SharingService,
+              private albumServie: AlbumService,
+              private snackBar: MatSnackBar,
+              private dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.getUserDetails();
@@ -88,8 +88,8 @@ export class HomeComponent implements OnInit {
               console.log(result);
               this.albums = [];
               this.albums.push('initial album');
-              if (result.body.length !== 0) {
-                result.body.forEach((album: string) => {
+              if (result.length !== 0) {
+                result.forEach((album: string) => {
                   this.albums.push(album);
                 });
               }
@@ -162,8 +162,8 @@ export class HomeComponent implements OnInit {
         console.log(result);
         this.albums = [];
         this.albums.push('initial album');
-        if (result.body.length !== 0) {
-          result.body.forEach((album: string) => {
+        if (result.length !== 0) {
+          result.forEach((album: string) => {
             this.albums.push(album);
           });
         }
@@ -222,38 +222,38 @@ export class HomeComponent implements OnInit {
       next: (result: any) => {
         console.log('svi');
         console.log(result);
-        let userList = result.body;
+        let userList = result;
         this.cognitoService.getUser()
-        .then((user:any) => {
-          if(user){
-            const index = userList.indexOf(user.username);
-            userList.splice(index, 1);
-            console.log(userList);
-            const dialogRef = this.dialog.open(ShareContentDialogComponent, {
-              width: '450px',
-              height: '350px',
-              data: { users: userList }
-            });
+          .then((user:any) => {
+            if(user){
+              const index = userList.indexOf(user.username);
+              userList.splice(index, 1);
+              console.log(userList);
+              const dialogRef = this.dialog.open(ShareContentDialogComponent, {
+                width: '450px',
+                height: '350px',
+                data: { users: userList }
+              });
 
-            dialogRef.afterClosed().subscribe((user: string) => {
-              if(user!==undefined){
-                this.sharingService.shareContent(user, this.sharedPrefix).subscribe({
-                  next: (result) => {
-                    if(result.statusCode==400){
-                      this.openSnackBar("This content is alredy shared with "+user);
-                    }else {
-                      this.openSnackBar("Shared content successfully added");
-                    }
+              dialogRef.afterClosed().subscribe((user: string) => {
+                if(user!==undefined){
+                  this.sharingService.shareContent(user, this.sharedPrefix).subscribe({
+                    next: (result) => {
+                      if(result.statusCode==400){
+                        this.openSnackBar("This content is alredy shared with "+user);
+                      }else {
+                        this.openSnackBar("Shared content successfully added");
+                      }
 
-                  },
-                  error: (error) => {
-                    console.error(error);
-                  },
-                });
-              }
+                    },
+                    error: (error) => {
+                      console.error(error);
+                    },
+                  });
+                }
 
-            });
-          }});
+              });
+            }});
 
       },
       error: (error) => {
@@ -280,7 +280,7 @@ export class HomeComponent implements OnInit {
     this.sharingService.getUsersForSharedContent(this.sharedPrefix).subscribe({
       next: (result:any) => {
         console.log(result);
-        let sharedWithUsers = result.body;
+        let sharedWithUsers = result;
 
         if(sharedWithUsers.length === 0){
           this.openSnackBar("This content is not shared");
