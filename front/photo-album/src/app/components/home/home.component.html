@@ -35,11 +35,11 @@
             <mat-icon>edit</mat-icon>
             <span>Edit</span>
           </button>
-          <button mat-menu-item disabled>
+          <button mat-menu-item (click)="shareContent(album,true)">
             <mat-icon>leak_add</mat-icon>
             <span>Share</span>
           </button>
-          <button mat-menu-item disabled>
+          <button mat-menu-item (click)="removeSharedContent(album,true)">
             <mat-icon>leak_remove</mat-icon>
             <span>Stop Sharing</span>
           </button>
@@ -93,11 +93,11 @@
             <mat-icon>edit</mat-icon>
             <span>Edit</span>
           </button>
-          <button mat-menu-item disabled>
+          <button mat-menu-item (click)="shareContent(file.name,false)">
             <mat-icon>leak_add</mat-icon>
             <span>Share</span>
           </button>
-          <button mat-menu-item disabled>
+          <button mat-menu-item (click)="removeSharedContent(file.name,false)">
             <mat-icon>leak_remove</mat-icon>
             <span>Stop Sharing</span>
           </button>
