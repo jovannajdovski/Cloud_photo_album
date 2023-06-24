@@ -55,8 +55,7 @@ export class HomeComponent implements OnInit {
     this.cognitoService.getSession()
     .then((user:any) => {
       if(user){
-        this.username=user.username;
-        console.log(user);
+        this.username=user.idToken.payload["cognito:username"];
       }
       else{
         this.router.navigate(['/log-in']);
@@ -89,7 +88,7 @@ export class HomeComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: string) => {
       if (result == "success") {
-        this.openSnackBar("Content added successfully");
+        this.openSnackBar("Content edited successfully");
       }
     });
   }
