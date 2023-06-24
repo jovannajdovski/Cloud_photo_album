@@ -109,8 +109,8 @@ Resources:
     CreateAlbumFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
-            CodeUri: album/create_album/
-            Handler: create_album.lambda_handler
+            CodeUri: album/create/
+            Handler: create.lambda_handler
             Runtime: python3.9
             Architectures:
                 - x86_64
@@ -131,8 +131,8 @@ Resources:
     GetAlbumFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
-            CodeUri: album/get_albums_for_prefix/
-            Handler: get_albums_for_prefix.lambda_handler
+            CodeUri: album/get_for_prefix/
+            Handler: get_for_prefix.lambda_handler
             Runtime: python3.9
             Architectures:
                 - x86_64
@@ -153,7 +153,86 @@ Resources:
                             -  method.request.querystring.prefix:
                                     Required: true
 
+    InitialAlbumDeleteFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/initial_delete/
+            Handler: initial_delete_handler.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+            - AmazonSNSFullAccess
+            - AmazonS3FullAccess
+            - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /album
+                        Method: Delete
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.user:
+                                    Required: true
+                            -   method.request.querystring.album_to_delete:
+                                    Required: true
+            Environment:
+                Variables:
+                    TopicName: !Ref AlbumDeleteTopic
+                    BucketName: !Ref PhotoBucket
+            EventInvokeConfig:
+                DestinationConfig:
+                    OnSuccess:
+                        Type: SNS
+                        Destination:
+                            Ref: AlbumDeleteTopic
 
+
+    DeleteAlbumFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/delete/
+            Handler: delete.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AmazonSNSFullAccess
+                - AWSLambdaBasicExecutionRole
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref AlbumDeleteTopic
+
+
+
+    DeleteAlbumContentFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/delete_content_ddb/
+            Handler: delete_content_ddb.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+                - AmazonSNSFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref PhotoMetadataTable
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref AlbumDeleteTopic
 
 
     MyLambdaExecutionRole:
@@ -185,6 +264,23 @@ Resources:
                             -   Effect: Allow
                                 Action: sns:Publish
                                 Resource: !Ref PhotoUploadTopic
+
+    AlbumDeleteTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            DisplayName: album_delete
+    DeleteAlbumSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref AlbumDeleteTopic
+            Protocol: lambda
+            Endpoint: !GetAtt DeleteAlbumFunction.Arn
+    DeleteAlbumContentSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref AlbumDeleteTopic
+            Protocol: lambda
+            Endpoint: !GetAtt DeleteAlbumContentFunction.Arn
 
 
     PhotoUploadTopic:

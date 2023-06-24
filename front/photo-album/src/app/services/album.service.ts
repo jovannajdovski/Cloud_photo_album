@@ -45,7 +45,7 @@ export class AlbumService {
     .set('user', user)
     .set('album_to_delete', albumToDelete);
 
-    return this.httpClient.delete('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header, params});
+    return this.httpClient.delete('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header, params});
 
   }
 
