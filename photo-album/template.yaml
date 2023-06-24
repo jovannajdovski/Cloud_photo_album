@@ -40,6 +40,7 @@ Resources:
                 - x86_64
             Policies:
                 - AmazonS3FullAccess
+                - AmazonSNSFullAccess
             Environment:
                 Variables:
                     BucketName: !Ref PhotoBucket
@@ -56,6 +57,7 @@ Resources:
                 - x86_64
             Policies:
                 - AmazonDynamoDBFullAccess
+                - AmazonSNSFullAccess
             Environment:
                 Variables:
                     TebleName: !Ref PhotoMetadataTable
@@ -69,8 +71,11 @@ Resources:
             Runtime: python3.9
             Architectures:
                 - x86_64
-            Policies:
-                - AmazonDynamoDBFullAccess
+            #            Policies:
+            #                -   SNSPublishMessagePolicy:
+            #                        TopicName: !GetAtt PhotoUploadTopic.TopicName
+            #                - AmazonSNSFullAccess
+            Role: !GetAtt MyLambdaExecutionRole.Arn
             Events:
                 ApiEvent:
                     Type: Api
@@ -81,6 +86,42 @@ Resources:
             Environment:
                 Variables:
                     TopicName: !Ref PhotoUploadTopic
+            EventInvokeConfig:
+                DestinationConfig:
+                    OnSuccess:
+                        Type: SNS
+                        Destination:
+                            Ref: PhotoUploadTopic
+
+    MyLambdaExecutionRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: MyLambdaExecutionRole
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    -   Effect: Allow
+                        Principal:
+                            Service: lambda.amazonaws.com
+                        Action: sts:AssumeRole
+            Policies:
+                -   PolicyName: AWSLambdaBasicExecutionRole
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            -   Effect: Allow
+                                Action:
+                                    - logs:CreateLogGroup
+                                    - logs:CreateLogStream
+                                    - logs:PutLogEvents
+                                Resource: '*'
+                -   PolicyName: LambdaPublishSNSPolicy
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            -   Effect: Allow
+                                Action: sns:Publish
+                                Resource: !Ref PhotoUploadTopic
 
 
     PhotoUploadTopic:
@@ -170,10 +211,10 @@ Resources:
                         UserPoolArn: !GetAtt PhotoAlbumUsersPool.Arn
                         Identity:
                             Header: Authorization
-            Cors:
-                AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-                AllowHeaders: "'content-type,Access-Control-Allow-Origin'"
-                AllowOrigin: "'*'"
+    #            Cors:
+    #                AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+    #                AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    #                AllowOrigin: "'*'"
 
 
 

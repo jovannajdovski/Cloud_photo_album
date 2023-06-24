@@ -1,6 +1,9 @@
 import json
 import os
+import traceback
+
 import boto3
+from botocore.exceptions import NoCredentialsError, ParamValidationError, EndpointConnectionError
 
 sns = boto3.client('sns')
 
@@ -9,12 +12,17 @@ sns = boto3.client('sns')
 def lambda_handler(event, context):
     print('prvi')
     print(event)
-    data = event
+    data = event['body']
+    print(type(data))
+    data = json.loads(data)
     try:
         topic_arn = os.environ['TopicName']
-        
+        print(topic_arn)
+        print(data)
+
+
         response = sns.publish(
-            TopicArn=topic_arn,
+            TopicArn=topic_arn.strip(),
             Message = json.dumps({"default": json.dumps({
                 'name': data['name'],
                 'type':data['type'],
@@ -27,17 +35,36 @@ def lambda_handler(event, context):
             })}),
             MessageStructure = 'json'
         )
-        
+
         print('Message published to SNS topic')
         return {
             'statusCode': 200,
-            'body': json.dumps(response)
+            'body': json.dumps(response),
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",  # Allow requests from any origin
+                "Access-Control-Allow-Headers": "Content-Type",  # Allow specified headers
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE"  # Allow specified methods
+            }
         }
+    except NoCredentialsError:
+        # Handle the case when no valid AWS credentials are found
+        print("AWS credentials not found.")
+
+    except ParamValidationError as e:
+        # Handle parameter validation errors
+        print("Parameter validation error:", str(e))
+
+    except EndpointConnectionError:
+        # Handle connection errors with the SNS service endpoint
+        print("Failed to connect to the SNS service endpoint.")
+
     except Exception as e:
-        print('Failed to publish message to SNS topic')
-        return {'status': 'error', 'message': str(e)}
-        
-        
+        # Handle other exceptions
+        traceback.print_exc()
+        print("An error occurred:", str(e))
+
+
 #  Test data
 # {
 #   "name": "namedd",

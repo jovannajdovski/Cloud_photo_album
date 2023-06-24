@@ -20,12 +20,24 @@ def lambda_handler(event, context):
         if obj['Key'] == name:
             return {
             'statusCode': 400,
-            'body': json.dumps('The destination already contains file with same name')
+            'body': json.dumps('The destination already contains file with same name'),
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",  # Allow requests from any origin
+                    "Access-Control-Allow-Headers": "Content-Type",  # Allow specified headers
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE"  # Allow specified methods
+                }
             }
 
     s3_client.put_object(Bucket=bucket_name, Key=name+"."+content_type, Body=data)
     
     return {
         'statusCode': 200,
-        'body': json.dumps('Object is uploaded successfully')
+        'body': json.dumps('Object is uploaded successfully'),
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",  # Allow requests from any origin
+            "Access-Control-Allow-Headers": "Content-Type",  # Allow specified headers
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE"  # Allow specified methods
+        }
     }

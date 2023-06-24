@@ -33,5 +33,11 @@ def lambda_handler(event, context):
     
     return {
         'statusCode': 200,
-        'body': json.dumps('Object is uploaded successfully')
+        'body': json.dumps('Object is uploaded successfully'),
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",  # Allow requests from any origin
+            "Access-Control-Allow-Headers": "Content-Type",  # Allow specified headers
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE"  # Allow specified methods
+        }
     }
