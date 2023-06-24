@@ -14,6 +14,8 @@ import { MaterialModule } from './material/material.module';
 import { AddContentDialogComponent } from './components/add-content-dialog/add-content-dialog.component'
 import { AuthInterceptor } from './interceptor/auth-interceptor.interceptor';
 import { AlbumNameDialogComponent } from './components/album-name-dialog/album-name-dialog.component';
+import { ShareContentDialogComponent } from './components/share-content-dialog/share-content-dialog.component';
+import { RemoveSharedContentDialogComponent } from './components/remove-shared-content-dialog/remove-shared-content-dialog.component';
 
 
 @NgModule({
@@ -25,7 +27,9 @@ import { AlbumNameDialogComponent } from './components/album-name-dialog/album-n
     HomeComponent,
     NavbarComponent,
     AddContentDialogComponent,
-    AlbumNameDialogComponent
+    AlbumNameDialogComponent,
+    ShareContentDialogComponent,
+    RemoveSharedContentDialogComponent
   ],
   imports: [
     BrowserModule,
