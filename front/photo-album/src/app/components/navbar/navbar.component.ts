@@ -4,6 +4,8 @@ import { CognitoService } from 'src/app/services/cognito.service';
 import { AddContentDialogComponent } from '../add-content-dialog/add-content-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AlbumService } from 'src/app/services/album.service';
+import { AlbumNameDialogComponent } from '../album-name-dialog/album-name-dialog.component';
 
 @Component({
   selector: 'app-navbar',
@@ -14,8 +16,11 @@ export class NavbarComponent implements OnInit {
 
   isLogged!: boolean;
 
-  constructor(private router: Router, private cognitoService: CognitoService, private _snackBar: MatSnackBar,
-    private dialog: MatDialog) { }
+  constructor(private router: Router,
+     private cognitoService: CognitoService,
+     private _snackBar: MatSnackBar,
+    private dialog: MatDialog,
+    private albumService: AlbumService) { }
 
   ngOnInit(): void {
     this.cognitoService.userState$.subscribe((result) => {
@@ -55,6 +60,33 @@ export class NavbarComponent implements OnInit {
   }
 
   public createAlbum() {
-    // :TODO create folder
+    this.cognitoService.getUser()
+    .then((user:any) => {
+      if(user){
+        let newAlbumPrefix = user.username+"/";
+
+        const dialogRef = this.dialog.open(AlbumNameDialogComponent, {
+          width: '400px',
+          height: '280px'
+        });
+    
+        dialogRef.afterClosed().subscribe((newAlbum: string) => {
+          console.log(newAlbum);
+          this.albumService.createAlbum(newAlbumPrefix, newAlbum).subscribe({
+            next: (result : string[]) => {
+              console.log(result);
+              this.openSnackBar("Album successfully created");
+            },
+            error: (error) => {
+              console.error(error);
+            },
+          });
+    
+        });
+
+      }
+    });
+
+   
   }
 }

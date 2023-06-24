@@ -1,0 +1,13 @@
+<div class="content">
+    <h2 mat-dialog-title>Enter new album name</h2>
+    <mat-dialog-content>
+        <mat-form-field appearance="outline">
+            <mat-label>New album name</mat-label>
+            <input matInput [(ngModel)]="newAlbum" placeholder="New album name">
+        </mat-form-field>
+    </mat-dialog-content>
+    <mat-dialog-actions>
+        <button mat-button [mat-dialog-close]="newAlbum" cdkFocusInitial [disabled]="!isValid()">OK</button>
+        <button mat-button (click)="dialogRef.close()">Cancel</button>
+    </mat-dialog-actions>
+</div>
