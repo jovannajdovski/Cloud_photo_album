@@ -128,6 +128,32 @@ Resources:
                         Method: POST
                         RestApiId: !Ref MyApi
 
+    GetAlbumFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/get_albums_for_prefix/
+            Handler: get_albums_for_prefix.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonS3FullAccess
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /album
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -  method.request.querystring.prefix:
+                                    Required: true
+
+
 
 
     MyLambdaExecutionRole:

@@ -83,12 +83,12 @@ export class HomeComponent implements OnInit {
             console.log(result);
             this.albums = [];
             this.albums.push('initial album');
-            if (result.body.length!==0){
-              result.body.forEach((album: string) => {
+            if (result.length!==0){
+              result.forEach((album: string) => {
                 this.albums.push(album);
               });
             }
-            
+
           },
           error: (error) => {
             console.error(error);
@@ -139,7 +139,7 @@ export class HomeComponent implements OnInit {
 
     });
 
-    
+
   }
 
   public viewAlbum(album: string){
@@ -148,7 +148,7 @@ export class HomeComponent implements OnInit {
     } else {
       this.currPrefix+= album+"/";
     }
-    
+
     this.refreshAlbums();
   }
 
@@ -163,7 +163,7 @@ export class HomeComponent implements OnInit {
             this.albums.push(album);
           });
         }
-        
+
       },
       error: (error) => {
         console.error(error);
@@ -192,8 +192,8 @@ export class HomeComponent implements OnInit {
 
   openSnackBar(message: string) {
     this.snackBar.open(message, 'Close', {
-      duration: 3000, 
-      horizontalPosition: 'center', 
+      duration: 3000,
+      horizontalPosition: 'center',
       verticalPosition: 'bottom',
     });
   }
