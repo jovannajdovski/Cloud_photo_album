@@ -16,7 +16,7 @@ export class DeleteService {
       Auth: environment.cognito
     })
   }
-  async sendToApiGateway(file_path:any, user:any):Promise<Observable<any>>{
+  async sendToApiGateway(file_path:any):Promise<Observable<any>>{
     const authHeader = await this.getAuthHeader();
     const header = new HttpHeaders({
       'Content-Type': 'application/json',
@@ -34,15 +34,14 @@ export class DeleteService {
         const token = session.getAccessToken().getJwtToken();
         const header = new HttpHeaders();
         
-        console.log(user)
         header.append('Authorization', token);
         console.log("HEADER");
         console.log(header);
-        return this.httpClient.delete('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/file?user='+user+'&file_path='+file_path,{headers:header});
+        return this.httpClient.delete('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/file?file_path='+file_path,{headers:header});
       });
     }
     
-    return this.httpClient.delete('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/file?user='+user+'&file_path='+file_path,{headers:header});
+    return this.httpClient.delete('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/file?file_path='+file_path,{headers:header});
       
   }
   private getAuthHeader(): Promise<string> {

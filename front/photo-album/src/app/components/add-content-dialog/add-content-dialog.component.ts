@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { UploadService } from 'src/app/services/upload.service';
 
@@ -28,7 +28,7 @@ export class AddContentDialogComponent implements OnInit {
   editTime=0;
   data="";
   createError = false;
-  constructor(private dialogRef: MatDialogRef<AddContentDialogComponent>, private uploadService:UploadService) { }
+  constructor(@Inject(MAT_DIALOG_DATA) private prefix: any,private dialogRef: MatDialogRef<AddContentDialogComponent>, private uploadService:UploadService) { }
 
   ngOnInit(): void {
   }
@@ -66,7 +66,7 @@ export class AddContentDialogComponent implements OnInit {
   addContent() {
     if (this.addContentForm.valid) {
       var file={
-        "name":this.addContentForm.value.name,
+        "name":this.prefix+this.addContentForm.value.name,
         "size":this.size,"type":this.type,
         "createTime":this.createTime,
         "editTime":this.editTime,

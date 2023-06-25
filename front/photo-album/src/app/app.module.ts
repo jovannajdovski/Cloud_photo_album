@@ -17,6 +17,9 @@ import { EditContentDialogComponent } from './components/edit-content-dialog/edi
 // import awsconfig from '../aws-exports.js';
 // Amplify.configure(awsconfig);
 import { AuthInterceptor } from './interceptor/auth-interceptor.interceptor';
+import { AlbumNameDialogComponent } from './components/album-name-dialog/album-name-dialog.component';
+import { ShareContentDialogComponent } from './components/share-content-dialog/share-content-dialog.component';
+import { RemoveSharedContentDialogComponent } from './components/remove-shared-content-dialog/remove-shared-content-dialog.component';
 
 
 @NgModule({
@@ -28,7 +31,10 @@ import { AuthInterceptor } from './interceptor/auth-interceptor.interceptor';
     HomeComponent,
     NavbarComponent,
     AddContentDialogComponent,
-    EditContentDialogComponent
+    EditContentDialogComponent,
+    AlbumNameDialogComponent,
+    ShareContentDialogComponent,
+    RemoveSharedContentDialogComponent
   ],
   imports: [
     BrowserModule,

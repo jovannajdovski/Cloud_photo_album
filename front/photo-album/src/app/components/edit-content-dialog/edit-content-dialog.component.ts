@@ -22,17 +22,15 @@ export class EditContentDialogComponent implements OnInit {
     tag: new FormControl('', [Validators.pattern(this.allTextPattern)]),
   });
   name="";
-  user="";
   filePath="";
   type:string="";
   createError = false;
   constructor(@Inject(MAT_DIALOG_DATA) public data: any,private dialogRef: MatDialogRef<EditContentDialogComponent>, private editService:EditService) { }
 
   ngOnInit(): void {
-    this.editContentForm.value.name=this.data.name;
+    this.editContentForm.get('name')!.patchValue(this.data.name.split('.')[0]);
     this.editContentForm.value.description=this.data.description;
     this.editContentForm.value.tag=this.data.tag;
-    this.user=this.data.user;
     this.filePath=this.data.file_path;
   }
 
@@ -43,7 +41,6 @@ export class EditContentDialogComponent implements OnInit {
       var editedData={"name":this.editContentForm.value.name,
           "description":this.editContentForm.value.description,
           "tag":this.editContentForm.value.tag,
-          "user": this.user,
           "file_path": this.filePath};
     
       (await this.editService.sendToApiGateway(editedData)).subscribe({
