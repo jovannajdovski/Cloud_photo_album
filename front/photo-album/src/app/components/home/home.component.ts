@@ -13,6 +13,8 @@ import { ShareContentDialogComponent } from '../share-content-dialog/share-conte
 import { SharingService } from 'src/app/services/sharing.service';
 import { RemoveSharedContentDialogComponent } from '../remove-shared-content-dialog/remove-shared-content-dialog.component';
 import { ReadService } from 'src/app/services/read.service';
+import { DownloadService } from 'src/app/services/download.service';
+import * as JSZip from 'jszip';
 
 @Component({
   selector: 'app-home',
@@ -39,6 +41,7 @@ export class HomeComponent implements OnInit {
     private albumService: AlbumService,
     private deleteService: DeleteService,
     private readService:ReadService,
+    private downloadService:DownloadService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog) { }
 
@@ -369,6 +372,45 @@ export class HomeComponent implements OnInit {
     (await this.deleteService.sendToApiGateway(file_path)).subscribe({
       next: (result) => {
         console.log(result)
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+  async download_file(file: any)
+  {
+    var file_path=this.currPrefix+file.name;
+    (await this.downloadService.sendToApiGateway(file_path)).subscribe({
+      next: (result) => {
+        console.log('primio')
+        /*const data = result.body; // Assuming 'result' contains the file data
+
+        const blob = new Blob([data], { type: 'application/octet-stream' });
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        const parts = file.name.split('/');
+        const lastPart = parts[parts.length - 1];
+        console.log(lastPart)
+        link.download = lastPart; // Set the desired filename and extension
+        link.click();
+
+        URL.revokeObjectURL(url);*/
+        const fileData = result.body; // Assuming 'result' contains the file data
+
+        const zip = new JSZip();
+        zip.file(file.name, fileData); // Add the file to the ZIP archive
+
+        zip.generateAsync({ type: 'blob' })
+          .then((content) => {
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(content);
+            downloadLink.download = 'archive.zip'; // Specify the desired file name with the .zip extension
+            downloadLink.click();
+    });
       },
       error: (error) => {
         console.error(error);
