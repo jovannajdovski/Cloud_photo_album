@@ -11,7 +11,7 @@ import { API } from 'aws-amplify';
 })
 export class EditService {
 
-  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) { 
+  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) {
     Amplify.configure({
       Auth: environment.cognito
     })
@@ -35,12 +35,12 @@ export class EditService {
         const header = new HttpHeaders();
 
         header.append('Authorization', token);
-        return this.httpClient.put('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/file',editedData,{headers:header});
+        return this.httpClient.put('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/file',editedData,{headers:header});
       });
     }
-    
-    return this.httpClient.put('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/file',editedData,{headers:header});
-      
+
+    return this.httpClient.put('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/file',editedData,{headers:header});
+
   }
   private getAuthHeader(): Promise<string> {
     return Auth.currentSession().then(session => {
@@ -48,5 +48,5 @@ export class EditService {
     });
   }
 
-  
+
 }

@@ -538,6 +538,104 @@ Resources:
                                 Action: sns:Publish
                                 Resource: !Ref PhotoUploadTopic
 
+
+
+    InitialFileEditFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/edit/
+            Handler: initial_edit.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonSNSFullAccess
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /file
+                        Method: PUT
+                        RestApiId: !Ref MyApi
+
+            Environment:
+                Variables:
+                    TopicName: !Ref FileEditTopic
+                    BucketName: !Ref PhotoBucket
+            EventInvokeConfig:
+                DestinationConfig:
+                    OnSuccess:
+                        Type: SNS
+                        Destination:
+                            Ref: FileEditTopic
+
+    EditFileFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/edit/
+            Handler: edit_file_s3.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AmazonSNSFullAccess
+                - AWSLambdaBasicExecutionRole
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref FileEditTopic
+
+
+
+    EditFileMetadataFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/edit/
+            Handler: edit_metadata_ddb.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+                - AmazonSNSFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref PhotoMetadataTable
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref FileEditTopic
+
+
+
+    FileEditTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            DisplayName: file_edit
+    EditFileSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref FileEditTopic
+            Protocol: lambda
+            Endpoint: !GetAtt EditFileFunction.Arn
+    EditFileMetadataSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref FileEditTopic
+            Protocol: lambda
+            Endpoint: !GetAtt EditFileMetadataFunction.Arn
+
+
     FileDeleteTopic:
         Type: AWS::SNS::Topic
         Properties:
