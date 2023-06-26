@@ -375,6 +375,139 @@ Resources:
                         Method: GET
                         RestApiId: !Ref MyApi
 
+
+    DownloadFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: download/
+            Handler: get.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /download
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            - method.request.querystring.key:
+                                  Required: true
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+
+
+    FileGetFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/get
+            Handler: get_file.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /file
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            - method.request.querystring.prefix:
+                                  Required: true
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+
+
+
+    InitialFileDeleteFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/delete/
+            Handler: initial_delete.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonSNSFullAccess
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /file
+                        Method: Delete
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.file_path:
+                                    Required: true
+            Environment:
+                Variables:
+                    TopicName: !Ref FileDeleteTopic
+                    BucketName: !Ref PhotoBucket
+            EventInvokeConfig:
+                DestinationConfig:
+                    OnSuccess:
+                        Type: SNS
+                        Destination:
+                            Ref: FileDeleteTopic
+
+    DeleteFileFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/delete/
+            Handler: delete_file_s3.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AmazonSNSFullAccess
+                - AWSLambdaBasicExecutionRole
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref FileDeleteTopic
+
+
+
+    DeleteFileMetadataFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/delete/
+            Handler: delete_metadata_ddb.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+                - AmazonSNSFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref PhotoMetadataTable
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref FileDeleteTopic
+
+
     MyLambdaExecutionRole:
         Type: AWS::IAM::Role
         Properties:
@@ -404,6 +537,25 @@ Resources:
                             -   Effect: Allow
                                 Action: sns:Publish
                                 Resource: !Ref PhotoUploadTopic
+
+    FileDeleteTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            DisplayName: file_delete
+    DeleteFileSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref FileDeleteTopic
+            Protocol: lambda
+            Endpoint: !GetAtt DeleteFileFunction.Arn
+    DeleteFileMetadataSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref FileDeleteTopic
+            Protocol: lambda
+            Endpoint: !GetAtt DeleteFileMetadataFunction.Arn
+
+
 
     AlbumDeleteTopic:
         Type: AWS::SNS::Topic

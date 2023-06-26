@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 })
 export class ReadService {
 
-  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) { 
+  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) {
     Amplify.configure({
       Auth: environment.cognito
     })
@@ -25,7 +25,7 @@ export class ReadService {
     const params = new HttpParams()
     .set('prefix', prefix);
 
-    return this.httpClient.get('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/file',{headers:header,params: params});
+    return this.httpClient.get('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/file',{headers:header,params: params});
 
   }
 }
