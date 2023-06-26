@@ -41,14 +41,19 @@ export class NavbarComponent implements OnInit {
   }
 
   openAddContentDialog() {
-    console.log("addContentDialogOpen");
-    const dialogRef = this.dialog.open(AddContentDialogComponent);
+    this.cognitoService.getUser()
+    .then((user:any) => {
+      if(user){
+        let newFilePrefix = user.username+"/";
+        const dialogRef = this.dialog.open(AddContentDialogComponent,{data:newFilePrefix});
 
-    dialogRef.afterClosed().subscribe((result: string) => {
-      if (result == "success") {
-        this.openSnackBar("Content added successfully");
-      } else {
-        this.openSnackBar("Error in the process");
+        dialogRef.afterClosed().subscribe((result: string) => {
+          if (result == "success") {
+            this.openSnackBar("Content added successfully");
+          } else {
+            this.openSnackBar("Error in the process");
+          }
+        });
       }
     });
   }

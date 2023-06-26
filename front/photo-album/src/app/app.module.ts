@@ -12,6 +12,10 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material/material.module';
 import { AddContentDialogComponent } from './components/add-content-dialog/add-content-dialog.component'
+import {Amplify} from 'aws-amplify';
+import { EditContentDialogComponent } from './components/edit-content-dialog/edit-content-dialog.component';
+// import awsconfig from '../aws-exports.js';
+// Amplify.configure(awsconfig);
 import { AuthInterceptor } from './interceptor/auth-interceptor.interceptor';
 import { AlbumNameDialogComponent } from './components/album-name-dialog/album-name-dialog.component';
 import { ShareContentDialogComponent } from './components/share-content-dialog/share-content-dialog.component';
@@ -27,6 +31,7 @@ import { RemoveSharedContentDialogComponent } from './components/remove-shared-c
     HomeComponent,
     NavbarComponent,
     AddContentDialogComponent,
+    EditContentDialogComponent,
     AlbumNameDialogComponent,
     ShareContentDialogComponent,
     RemoveSharedContentDialogComponent
