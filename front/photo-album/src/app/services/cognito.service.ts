@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 import { Amplify, Auth } from 'aws-amplify';
 import { environment } from 'src/environments/environment';
 import { User } from '../models/user';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import {AuthenticationDetails, CognitoUser, CognitoUserPool} from 'amazon-cognito-identity-js';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 const userPool=new CognitoUserPool(environment.poolData);
 @Injectable({
@@ -19,8 +19,8 @@ export class CognitoService {
     'Content-Type': 'application/json',
     skip: 'true',
   });
-  
-  constructor() {
+
+  constructor(private httpClient:HttpClient) {
     this.loggedIn=false;
     Amplify.configure({
       Auth: environment.cognito
@@ -84,5 +84,16 @@ export class CognitoService {
 
   public isLoggedIn(): boolean {
     return this.loggedIn;
+  }
+
+  getUsers():Observable<string[]>{
+    const token = this.session;
+    const header = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    });
+
+    return this.httpClient.get<string[]>('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/users',{headers:header});
+
   }
 }

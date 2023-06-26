@@ -1,0 +1,790 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    photo-album
+    
+    Sample SAM Template for photo-album
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+    Function:
+        Timeout: 3
+        MemorySize: 128
+
+Resources:
+    PhotoMetadataTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: photo-metadata
+            AttributeDefinitions:
+                -   AttributeName: id
+                    AttributeType: S
+            KeySchema:
+                -   AttributeName: id
+                    KeyType: HASH
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
+            BillingMode: PROVISIONED
+
+    SharingTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: photo-sharing
+            AttributeDefinitions:
+                -   AttributeName: id
+                    AttributeType: S
+            KeySchema:
+                -   AttributeName: id
+                    KeyType: HASH
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
+            BillingMode: PROVISIONED
+
+    PhotoBucket:
+        Type: AWS::S3::Bucket
+
+    WritePhotoFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_file_s3/
+            Handler: write_file_s3.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AmazonSNSFullAccess
+                - AWSLambdaBasicExecutionRole
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                PhotoUploadTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref PhotoUploadTopic
+
+
+
+    WriteMetadataFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_metadata_ddb/
+            Handler: write_metadata_ddb.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+                - AmazonSNSFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref PhotoMetadataTable
+                    BucketName: !Ref PhotoBucket
+            Events:
+                PhotoUploadTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref PhotoUploadTopic
+
+    InitialUploadFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: initial_upload/
+            Handler: initial_upload_handler.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            #            Policies:
+            #                -   SNSPublishMessagePolicy:
+            #                        TopicName: !GetAtt PhotoUploadTopic.TopicName
+            #                - AmazonSNSFullAccess
+            Role: !GetAtt MyLambdaExecutionRole.Arn
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /file
+                        Method: POST
+                        RestApiId: !Ref MyApi
+            Environment:
+                Variables:
+                    TopicName: !Ref PhotoUploadTopic
+            EventInvokeConfig:
+                DestinationConfig:
+                    OnSuccess:
+                        Type: SNS
+                        Destination:
+                            Ref: PhotoUploadTopic
+
+
+    CreateAlbumFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/create/
+            Handler: create.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonS3FullAccess
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /album
+                        Method: POST
+                        RestApiId: !Ref MyApi
+
+    GetAlbumFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/get_for_prefix/
+            Handler: get_for_prefix.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonS3FullAccess
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /album
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.prefix:
+                                    Required: true
+
+    InitialAlbumDeleteFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/initial_delete/
+            Handler: initial_delete_handler.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonSNSFullAccess
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /album
+                        Method: Delete
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.user:
+                                    Required: true
+                            -   method.request.querystring.album_to_delete:
+                                    Required: true
+            Environment:
+                Variables:
+                    TopicName: !Ref AlbumDeleteTopic
+                    BucketName: !Ref PhotoBucket
+            EventInvokeConfig:
+                DestinationConfig:
+                    OnSuccess:
+                        Type: SNS
+                        Destination:
+                            Ref: AlbumDeleteTopic
+
+
+    DeleteAlbumFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/delete/
+            Handler: delete.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AmazonSNSFullAccess
+                - AWSLambdaBasicExecutionRole
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref AlbumDeleteTopic
+
+
+
+    DeleteAlbumContentFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: album/delete_content_ddb/
+            Handler: delete_content_ddb.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+                - AmazonSNSFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref PhotoMetadataTable
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref AlbumDeleteTopic
+
+    GetUsersSharingFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: sharing/users/get
+            Handler: get_users_shared.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref SharingTable
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /sharing/users
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.user:
+                                    Required: true
+
+
+    GetSharingFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: sharing/get_shared_content/
+            Handler: get_shared_content.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref SharingTable
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /sharing
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.user:
+                                    Required: true
+
+
+    ShareContentFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: sharing/share_content/
+            Handler: share_content.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref SharingTable
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /sharing
+                        Method: POST
+                        RestApiId: !Ref MyApi
+
+
+    RemoveSharingFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: sharing/remove/
+            Handler: remove.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref SharingTable
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /sharing
+                        Method: DELETE
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.user:
+                                    Required: true
+                            -   method.request.querystring.shared_content_to_remove:
+                                    Required: true
+
+
+
+    GetUsersFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: users/get/
+            Handler: get.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonCognitoReadOnly
+            Environment:
+                Variables:
+                    UserPoolId: !Ref PhotoAlbumUsersPool
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /users
+                        Method: GET
+                        RestApiId: !Ref MyApi
+
+
+    DownloadFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: download/
+            Handler: get.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /download
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            - method.request.querystring.key:
+                                  Required: true
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+
+
+    FileGetFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/get
+            Handler: get_file.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /file
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            - method.request.querystring.prefix:
+                                  Required: true
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+
+
+
+    InitialFileDeleteFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/delete/
+            Handler: initial_delete.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonSNSFullAccess
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /file
+                        Method: Delete
+                        RestApiId: !Ref MyApi
+                        RequestParameters:
+                            -   method.request.querystring.file_path:
+                                    Required: true
+            Environment:
+                Variables:
+                    TopicName: !Ref FileDeleteTopic
+                    BucketName: !Ref PhotoBucket
+            EventInvokeConfig:
+                DestinationConfig:
+                    OnSuccess:
+                        Type: SNS
+                        Destination:
+                            Ref: FileDeleteTopic
+
+    DeleteFileFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/delete/
+            Handler: delete_file_s3.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AmazonSNSFullAccess
+                - AWSLambdaBasicExecutionRole
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref FileDeleteTopic
+
+
+
+    DeleteFileMetadataFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/delete/
+            Handler: delete_metadata_ddb.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+                - AmazonSNSFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref PhotoMetadataTable
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref FileDeleteTopic
+
+
+    MyLambdaExecutionRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: MyLambdaExecutionRole
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    -   Effect: Allow
+                        Principal:
+                            Service: lambda.amazonaws.com
+                        Action: sts:AssumeRole
+            Policies:
+                -   PolicyName: AWSLambdaBasicExecutionRole
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            -   Effect: Allow
+                                Action:
+                                    - logs:CreateLogGroup
+                                    - logs:CreateLogStream
+                                    - logs:PutLogEvents
+                                Resource: '*'
+                -   PolicyName: LambdaPublishSNSPolicy
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            -   Effect: Allow
+                                Action: sns:Publish
+                                Resource: !Ref PhotoUploadTopic
+
+
+
+    InitialFileEditFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/edit/
+            Handler: initial_edit.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonSNSFullAccess
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /file
+                        Method: PUT
+                        RestApiId: !Ref MyApi
+
+            Environment:
+                Variables:
+                    TopicName: !Ref FileEditTopic
+                    BucketName: !Ref PhotoBucket
+            EventInvokeConfig:
+                DestinationConfig:
+                    OnSuccess:
+                        Type: SNS
+                        Destination:
+                            Ref: FileEditTopic
+
+    EditFileFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/edit/
+            Handler: edit_file_s3.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonS3FullAccess
+                - AmazonSNSFullAccess
+                - AWSLambdaBasicExecutionRole
+            Environment:
+                Variables:
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref FileEditTopic
+
+
+
+    EditFileMetadataFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: file/edit/
+            Handler: edit_metadata_ddb.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+                - AmazonSNSFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref PhotoMetadataTable
+                    BucketName: !Ref PhotoBucket
+            Events:
+                AlbumDeleteTopicTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref FileEditTopic
+
+
+
+    FileEditTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            DisplayName: file_edit
+    EditFileSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref FileEditTopic
+            Protocol: lambda
+            Endpoint: !GetAtt EditFileFunction.Arn
+    EditFileMetadataSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref FileEditTopic
+            Protocol: lambda
+            Endpoint: !GetAtt EditFileMetadataFunction.Arn
+
+
+    FileDeleteTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            DisplayName: file_delete
+    DeleteFileSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref FileDeleteTopic
+            Protocol: lambda
+            Endpoint: !GetAtt DeleteFileFunction.Arn
+    DeleteFileMetadataSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref FileDeleteTopic
+            Protocol: lambda
+            Endpoint: !GetAtt DeleteFileMetadataFunction.Arn
+
+
+
+    AlbumDeleteTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            DisplayName: album_delete
+    DeleteAlbumSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref AlbumDeleteTopic
+            Protocol: lambda
+            Endpoint: !GetAtt DeleteAlbumFunction.Arn
+    DeleteAlbumContentSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref AlbumDeleteTopic
+            Protocol: lambda
+            Endpoint: !GetAtt DeleteAlbumContentFunction.Arn
+
+
+    PhotoUploadTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            DisplayName: photo_upload
+
+    WritePhotoS3Subscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref PhotoUploadTopic
+            Protocol: lambda
+            Endpoint: !GetAtt WritePhotoFunction.Arn
+
+    WriteMetadataSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            TopicArn: !Ref PhotoUploadTopic
+            Protocol: lambda
+            Endpoint: !GetAtt WriteMetadataFunction.Arn
+
+
+    #TODO API
+    PhotoAlbumUsersPool:
+        Type: AWS::Cognito::UserPool
+        Properties:
+            UserPoolName: photo-album-users-pool
+            AutoVerifiedAttributes:
+                - email
+            AccountRecoverySetting:
+                RecoveryMechanisms:
+                    -   Name: verified_email
+                        Priority: 1
+            VerificationMessageTemplate:
+                DefaultEmailOption: CONFIRM_WITH_CODE
+            AdminCreateUserConfig:
+                AllowAdminCreateUserOnly: false
+            EmailConfiguration:
+                EmailSendingAccount: COGNITO_DEFAULT
+            Policies:
+                PasswordPolicy:
+                    MinimumLength: 8
+                    RequireLowercase: true
+                    RequireNumbers: true
+                    RequireSymbols: true
+                    RequireUppercase: true
+            Schema:
+                -   Name: given_name
+                    AttributeDataType: String
+                    Mutable: true
+                    Required: true
+                -   Name: family_name
+                    AttributeDataType: String
+                    Mutable: true
+                    Required: true
+                -   Name: email
+                    AttributeDataType: String
+                    Mutable: true
+                    Required: true
+                -   Name: birthdate
+                    AttributeDataType: String
+                    Mutable: true
+                    Required: true
+            MfaConfiguration: 'OFF'
+            UsernameConfiguration:
+                CaseSensitive: false
+            UsernameAttributes:
+                - email
+
+
+    PhotoAlbumUsersPoolClient:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            UserPoolId: !Ref PhotoAlbumUsersPool
+            ClientName: photo-album-users-pool-client
+            GenerateSecret: false
+
+
+    MyApi:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: Dev
+            Auth:
+                DefaultAuthorizer: MyCognitoAuthorizer
+                Authorizers:
+                    MyCognitoAuthorizer:
+                        UserPoolArn: !GetAtt PhotoAlbumUsersPool.Arn
+                        Identity:
+                            Header: Authorization
+    #            Cors:
+    #                AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+    #                AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    #                AllowOrigin: "'*'"
+
+
+
+    ApplicationResourceGroup:
+        Type: AWS::ResourceGroups::Group
+        Properties:
+            Name:
+                Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+            ResourceQuery:
+                Type: CLOUDFORMATION_STACK_1_0
+    ApplicationInsightsMonitoring:
+        Type: AWS::ApplicationInsights::Application
+        Properties:
+            ResourceGroupName:
+                Ref: ApplicationResourceGroup
+            AutoConfigurationEnabled: 'true'
+Outputs:
+    # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+    # Find out more about other implicit resources you can reference within SAM
+    # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+    InitialUploadFunction:
+        Description: Initial upload handler
+        Value: !GetAtt InitialUploadFunction.Arn
+

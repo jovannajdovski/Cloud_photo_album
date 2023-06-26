@@ -1,0 +1,15 @@
+<div class="content">
+    <h1 mat-dialog-title>Choose user to share</h1>
+    <div mat-dialog-content>
+        <mat-form-field appearance="outline">
+            <mat-label>User</mat-label>
+            <mat-select [(ngModel)]="selectedUser" >
+                <mat-option *ngFor="let user of data.users" [value]="user">{{ user }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+    <div mat-dialog-actions class="btns">
+        <button mat-button [mat-dialog-close]="selectedUser" cdkFocusInitial>OK</button>
+        <button mat-button (click)="onCancelClick()">Cancel</button>
+    </div>
+</div>
