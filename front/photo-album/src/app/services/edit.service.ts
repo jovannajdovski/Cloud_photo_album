@@ -35,11 +35,11 @@ export class EditService {
         const header = new HttpHeaders();
 
         header.append('Authorization', token);
-        return this.httpClient.put('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/file',editedData,{headers:header});
+        return this.httpClient.put('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/file',editedData,{headers:header});
       });
     }
 
-    return this.httpClient.put('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/file',editedData,{headers:header});
+    return this.httpClient.put('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/file',editedData,{headers:header});
 
   }
   private getAuthHeader(): Promise<string> {

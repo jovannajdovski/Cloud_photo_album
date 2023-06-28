@@ -87,8 +87,8 @@ export class HomeComponent implements OnInit {
               console.log(result);
               this.files = [];
               if (result.length !== 0) {
-                result.forEach((file: string) => {
-                  this.files.push({"name":file, updated:new Date()});
+                result.forEach((file: {name:string, updated:Date}) => {
+                  this.files.push({name:file.name, "updated":file.updated});
                 });
               }
 
@@ -193,8 +193,8 @@ export class HomeComponent implements OnInit {
         console.log(result);
         this.files = [];
         if (result.length !== 0) {
-          result.forEach((file: string) => {
-            this.files.push({"name":file, updated:new Date()});
+          result.forEach((file: {name:string, updated:Date}) => {
+            this.files.push({name:file.name, "updated":file.updated});
           });
         }
 
@@ -399,7 +399,8 @@ export class HomeComponent implements OnInit {
         link.click();
 
         URL.revokeObjectURL(url);*/
-        const fileData = result.body; // Assuming 'result' contains the file data
+        const fileData = result; // Assuming 'result' contains the file data
+        console.log(fileData);
         const zip = new JSZip();
         zip.file(file.name, fileData); // Add the file to the ZIP archive
 

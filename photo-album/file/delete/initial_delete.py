@@ -8,7 +8,7 @@ sns = boto3.client('sns')
 
 def lambda_handler(event, context):
     file_path = event['queryStringParameters']['file_path']
-    print(file_path)
+
     s3 = boto3.resource('s3')
 
     bucket_name = os.environ["BucketName"]
@@ -33,7 +33,7 @@ def lambda_handler(event, context):
 
     try:
         topic_arn = os.environ["TopicName"]
-        print(topic_arn)
+
         response = sns.publish(
             TopicArn=topic_arn,
             Message=json.dumps({"default": json.dumps({

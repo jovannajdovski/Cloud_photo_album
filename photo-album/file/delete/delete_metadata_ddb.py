@@ -2,6 +2,7 @@ import json
 import os
 
 import boto3
+import time
 
 
 def lambda_handler(event, context):
@@ -25,10 +26,11 @@ def lambda_handler(event, context):
         items = response['Items']
         for item in items:
             table.delete_item(Key={'id': item['id']})
-
+        print(items)
         return {
             'statusCode': 200,
-            'body': 'File metadata deleted successfully'
+            'body': 'File metadata deleted successfully',
+            'content': items
         }
     except Exception as e:
         return {
