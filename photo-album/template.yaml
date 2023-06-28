@@ -76,12 +76,7 @@ Resources:
             Environment:
                 Variables:
                     BucketName: !Ref PhotoBucket
-            Events:
-                PhotoUploadTopicEvent:
-                    Type: SNS
-                    Properties:
-                        Topic: !Ref PhotoUploadTopic
-
+                    TableName: !Ref PhotoMetadataTable
 
 
     WriteMetadataFunction:
@@ -100,11 +95,6 @@ Resources:
                 Variables:
                     TableName: !Ref PhotoMetadataTable
                     BucketName: !Ref PhotoBucket
-            Events:
-                PhotoUploadTopicEvent:
-                    Type: SNS
-                    Properties:
-                        Topic: !Ref PhotoUploadTopic
 
     InitialUploadFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -114,11 +104,11 @@ Resources:
             Runtime: python3.9
             Architectures:
                 - x86_64
-            #            Policies:
-            #                -   SNSPublishMessagePolicy:
-            #                        TopicName: !GetAtt PhotoUploadTopic.TopicName
-            #                - AmazonSNSFullAccess
-            Role: !GetAtt MyLambdaExecutionRole.Arn
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonS3FullAccess
+                - AmazonSNSFullAccess
+#            Role: !GetAtt MyLambdaExecutionRole.Arn
             Events:
                 ApiEvent:
                     Type: Api
@@ -129,6 +119,7 @@ Resources:
             Environment:
                 Variables:
                     TopicName: !Ref PhotoUploadTopic
+                    BucketName: !Ref PhotoBucket
             EventInvokeConfig:
                 DestinationConfig:
                     OnSuccess:
@@ -630,6 +621,7 @@ Resources:
         Type: AWS::SNS::Topic
         Properties:
             DisplayName: file_edit
+
     EditFileSubscription:
         Type: AWS::SNS::Subscription
         Properties:
@@ -680,19 +672,12 @@ Resources:
         Properties:
             DisplayName: photo_upload
 
-    WritePhotoS3Subscription:
+    FileSubscription:
         Type: AWS::SNS::Subscription
         Properties:
             TopicArn: !Ref PhotoUploadTopic
             Protocol: lambda
-            Endpoint: !GetAtt WritePhotoFunction.Arn
-
-    WriteMetadataSubscription:
-        Type: AWS::SNS::Subscription
-        Properties:
-            TopicArn: !Ref PhotoUploadTopic
-            Protocol: lambda
-            Endpoint: !GetAtt WriteMetadataFunction.Arn
+            Endpoint: !GetAtt WriteBridgeFunction.Arn
 
 
     #TODO API
@@ -964,6 +949,10 @@ Resources:
 
 
 
+
+
+
+
     DeleteStateMachine:
         Type: AWS::Serverless::StateMachine
         Properties:
@@ -1190,6 +1179,234 @@ Resources:
                     Properties:
                         Topic: !Ref FileDeleteTopic
     #end
+
+    WriteStateMachine:
+        Type: AWS::Serverless::StateMachine
+        Properties:
+            Policies:
+                - AWSLambda_FullAccess
+            Definition:
+                Comment: Parallel execution with timeout
+                StartAt: StartLambda
+                States:
+                    StartLambda:
+                        Type: Task
+                        Resource: !GetAtt WriteWorkflowFunction.Arn
+                        Next: ParallelState
+
+                    ParallelState:
+                        Type: Parallel
+                        Branches:
+                            -   StartAt: S3_upload
+                                States:
+                                    S3_upload:
+                                        Type: Task
+                                        Resource: !GetAtt WritePhotoFunction.Arn
+                                        TimeoutSeconds: 5
+                                        Catch:
+                                            -   ErrorEquals:
+                                                    - States.Timeout
+                                                Next: HandleTimeoutS3
+                                        End: true
+
+                                    HandleTimeoutS3:
+                                        Type: Pass
+                                        Result: S3 uploading timed out
+                                        End: true
+
+                            -   StartAt: Dynamo_upload
+                                States:
+                                    Dynamo_upload:
+                                        Type: Task
+                                        Resource: !GetAtt WriteMetadataFunction.Arn
+                                        TimeoutSeconds: 3
+                                        Catch:
+                                            -   ErrorEquals:
+                                                    - States.Timeout
+                                                Next: HandleTimeoutDynamo
+                                        End: true
+
+                                    HandleTimeoutDynamo:
+                                        Type: Pass
+                                        Result: Dynamo uploading timed out
+                                        End: true
+
+                        ResultPath: $.ParallelResult
+                        Next: CheckSuccessState
+
+                    CheckSuccessState:
+                        Type: Choice
+                        Choices:
+                            -   And:
+                                    -   Or:
+                                            -   Variable: $.ParallelResult[0]
+                                                StringEquals: S3 uploading timed out
+                                            -   Variable: $.ParallelResult[0].statusCode
+                                                NumericEquals: 500
+                                    -   Or:
+                                            -   Variable: $.ParallelResult[1]
+                                                StringEquals: Dynamo uploading timed out
+                                            -   Variable: $.ParallelResult[1].statusCode
+                                                NumericEquals: 500
+                                Next: BothFailed
+
+                            -   And:
+                                    -   Or:
+                                            -   Variable: $.ParallelResult[0]
+                                                StringEquals: S3 uploading timed out
+                                            -   Variable: $.ParallelResult[0].statusCode
+                                                NumericEquals: 500
+                                    -   Variable: $.ParallelResult[1].statusCode
+                                        NumericEquals: 200
+                                Next: S3Failed
+
+                            -   And:
+                                    -   Variable: $.ParallelResult[0].statusCode
+                                        NumericEquals: 200
+                                    -   Or:
+                                            -   Variable: $.ParallelResult[1]
+                                                StringEquals: Dynamo uploading timed out
+                                            -   Variable: $.ParallelResult[1].statusCode
+                                                NumericEquals: 500
+                                Next: DynamoFailed
+
+                            -   And:
+                                    -   Variable: $.ParallelResult[0].statusCode
+                                        NumericEquals: 200
+                                    -   Variable: $.ParallelResult[1].statusCode
+                                        NumericEquals: 200
+                                Next: ParallelSuccess
+
+                        Default: BothFailed
+
+                    ParallelSuccess:
+                        Type: Task
+                        Resource: !GetAtt WriteSuccessFunction.Arn
+                        InputPath: $.Records[0]
+                        ResultPath: $.NotifyInput
+                        Next: NotifyUser
+
+                    S3Failed:
+                        Type: Task
+                        Resource: !GetAtt WriteRollbackDDBFunction.Arn
+                        InputPath: $.ParallelResult[1]
+                        ResultPath: $.NotifyInput
+                        Next: NotifyUser
+
+                    DynamoFailed:
+                        Type: Task
+                        Resource: !GetAtt WriteRollbackS3.Arn
+                        InputPath: $.ParallelResult[0]
+                        ResultPath: $.NotifyInput
+                        Next: NotifyUser
+
+                    BothFailed:
+                        Type: Task
+                        Resource: !GetAtt WriteBothFunction.Arn
+                        InputPath: $.Records[0]
+                        ResultPath: $.NotifyInput
+                        Next: NotifyUser
+
+                    NotifyUser:
+                        Type: Task
+                        Resource: !GetAtt SendingMailFunction.Arn
+                        InputPath: $.NotifyInput
+                        End: true
+
+
+
+
+
+
+
+    WriteBothFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_stepper/
+            Handler: both_faliure.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonSNSFullAccess
+
+    WriteRollbackS3:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_stepper/
+            Handler: write_rollback_s3.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonS3FullAccess
+
+
+    WriteRollbackDDBFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_stepper/
+            Handler: write_rollback_ddb.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    TableName: !Ref PhotoMetadataTable
+
+    WriteSuccessFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_stepper/
+            Handler: write_success.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonSNSFullAccess
+
+    WriteWorkflowFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_stepper/
+            Handler: write_workflow.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+
+    WriteBridgeFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: write_stepper/
+            Handler: write_bridge.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AWSStepFunctionsFullAccess
+            Environment:
+                Variables:
+                    StateMachine: !GetAtt WriteStateMachine.Arn
+
+            Events:
+                DeleteTopicTopicEvent:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref PhotoUploadTopic
+
+
+
+
+
 
     ApplicationResourceGroup:
         Type: AWS::ResourceGroups::Group
