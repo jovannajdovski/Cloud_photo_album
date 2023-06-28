@@ -1,0 +1,13 @@
+<div class="content">
+    <h2 mat-dialog-title>Invite family member via email</h2>
+    <mat-dialog-content>
+        <mat-form-field appearance="outline" id="member">
+            <mat-label>Family member email</mat-label>
+            <input matInput [(ngModel)]="memberToInvite" placeholder="Family member email">
+        </mat-form-field>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+        <button mat-button [mat-dialog-close]="memberToInvite" cdkFocusInitial [disabled]="!isValid()">INVITE</button>
+        <button mat-button (click)="dialogRef.close()">Cancel</button>
+    </mat-dialog-actions>
+</div>

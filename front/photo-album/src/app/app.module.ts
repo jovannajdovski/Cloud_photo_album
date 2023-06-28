@@ -20,6 +20,8 @@ import { AuthInterceptor } from './interceptor/auth-interceptor.interceptor';
 import { AlbumNameDialogComponent } from './components/album-name-dialog/album-name-dialog.component';
 import { ShareContentDialogComponent } from './components/share-content-dialog/share-content-dialog.component';
 import { RemoveSharedContentDialogComponent } from './components/remove-shared-content-dialog/remove-shared-content-dialog.component';
+import { InviteFamilyMemberDialogComponent } from './components/invite-family-member-dialog/invite-family-member-dialog.component';
+import { FamilyMemberRegistrationComponent } from './components/family-member-registration/family-member-registration.component';
 
 
 @NgModule({
@@ -34,7 +36,9 @@ import { RemoveSharedContentDialogComponent } from './components/remove-shared-c
     EditContentDialogComponent,
     AlbumNameDialogComponent,
     ShareContentDialogComponent,
-    RemoveSharedContentDialogComponent
+    RemoveSharedContentDialogComponent,
+    InviteFamilyMemberDialogComponent,
+    FamilyMemberRegistrationComponent
   ],
   imports: [
     BrowserModule,
