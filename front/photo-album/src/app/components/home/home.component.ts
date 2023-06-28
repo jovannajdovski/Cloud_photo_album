@@ -87,8 +87,8 @@ export class HomeComponent implements OnInit {
               console.log(result);
               this.files = [];
               if (result.body.length !== 0) {
-                result.body.forEach((file: string) => {
-                  this.files.push({"name":file, updated:new Date()});
+                result.body.forEach((file: {name:string, updated:Date}) => {
+                  this.files.push({name:file.name, "updated":file.updated});
                 });
               }
 
@@ -193,8 +193,8 @@ export class HomeComponent implements OnInit {
         console.log(result);
         this.files = [];
         if (result.body.length !== 0) {
-          result.body.forEach((file: string) => {
-            this.files.push({"name":file, updated:new Date()});
+          result.body.forEach((file: {name:string, updated:Date}) => {
+            this.files.push({name:file.name, "updated":file.updated});
           });
         }
 

@@ -31,10 +31,6 @@
             <mat-icon>visibility</mat-icon>
             <span>View Content</span>
           </button>
-          <button mat-menu-item>
-            <mat-icon>edit</mat-icon>
-            <span>Edit</span>
-          </button>
           <button mat-menu-item (click)="shareContent(album,true)">
             <mat-icon>leak_add</mat-icon>
             <span>Share</span>
@@ -46,10 +42,6 @@
           <button mat-menu-item (click)="deleteAlbum(album)">
             <mat-icon>delete</mat-icon>
             <span>Remove</span>
-          </button>
-          <button mat-menu-item>
-            <mat-icon>get_app</mat-icon>
-            <span>Download</span>
           </button>
           <button mat-menu-item (click)="addContentToAlbum(album)">
             <mat-icon>add_circle</mat-icon>
@@ -85,10 +77,7 @@
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #menuAlbum="matMenu">
-          <button mat-menu-item>
-            <mat-icon>visibility</mat-icon>
-            <span>View Content</span>
-          </button>
+          
           <button (click)="edit_file(file)" mat-menu-item>
             <mat-icon>edit</mat-icon>
             <span>Edit</span>
@@ -100,10 +89,6 @@
           <button mat-menu-item (click)="removeSharedContent(file.name,false)">
             <mat-icon>leak_remove</mat-icon>
             <span>Stop Sharing</span>
-          </button>
-          <button mat-menu-item>
-            <mat-icon>redo</mat-icon>
-            <span>Move to other album</span>
           </button>
           <button (click)="remove_file(file)" mat-menu-item>
             <mat-icon>delete</mat-icon>
