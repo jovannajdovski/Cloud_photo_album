@@ -842,7 +842,6 @@ Resources:
                 Variables:
                     UserPoolId: !Ref PhotoAlbumUsersPool
                     FamilyTableName: !Ref FamilyTable
-                    Link: "http:\\localhost:4200\"
 
 
     VerifyFamilyFunction:
@@ -926,6 +925,7 @@ Resources:
     UpdateFamilyVerificationFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
+            Timeout: 60
             CodeUri: invite
             Handler: update_family_member_verification.lambda_handler
             Runtime: python3.9
@@ -947,11 +947,11 @@ Resources:
                         Auth:
                             Authorizer: NONE
                         RequestParameters:
-                            -   method.request.querystring.inviteId:
+                            -   method.request.querystring.invite_id:
                                     Required: true
-                            -   method.request.querystring.username:
+                            -   method.request.querystring.invited_username:
                                     Required: true
-                            -   method.request.querystring.inviter:
+                            -   method.request.querystring.sender:
                                     Required: true
             Environment:
                 Variables:

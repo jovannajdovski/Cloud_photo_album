@@ -11,7 +11,7 @@ import { InviteService } from 'src/app/services/invite.service';
 export class ConfirmInviteComponent implements OnInit {
 
   hasError: boolean;
-  invite_id: string = '';
+  inviteId: string = '';
   sender: string = '';
   invited_username: string = '';
 
@@ -24,13 +24,14 @@ export class ConfirmInviteComponent implements OnInit {
   ngOnInit() {
     this.route.queryParams
       .subscribe(params => {
-          this.invite_id = params['invite_id'];
-          this.sender = params['sender'];
-          this.invited_username = params['invited_username'];
+          this.inviteId = params['inviteId'];
+          this.sender = params['inviter'];
+          this.invited_username = params['username'];
         }
       );
 
-    this.inviteService.confirmInvite(this.invite_id,this.sender,this.invited_username).subscribe({
+    console.log(this.inviteId,this.sender,this.invited_username)
+    this.inviteService.confirmInvite(this.inviteId,this.sender,this.invited_username).subscribe({
       next: (result) => {
         this.hasError = false;
       },

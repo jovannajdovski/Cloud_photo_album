@@ -6,13 +6,15 @@ import boto3
 
 def lambda_handler(event, context):
     print(event)
-    event = json.loads(event["body"])
-    invite_id = event['inviteId']
-    username = event['username']
-    inviter = event['inviter']
+    invite_id = event["queryStringParameters"]['invite_id']
+    username = event["queryStringParameters"]['invited_username']
+    inviter = event["queryStringParameters"]['sender']
+    print(inviter)
+    print(username)
     dynamodb = boto3.client('dynamodb')
 
     table_name = os.environ['FamilyTableName']
+    print(table_name)
 
     try:
         response = dynamodb.scan(
@@ -43,7 +45,7 @@ def lambda_handler(event, context):
 
         cognito_client = boto3.client('cognito-idp')
         user_pool_id = os.environ["UserPoolId"]
-
+        print(user_pool_id)
         cognito_client.admin_enable_user(
             UserPoolId=user_pool_id,
             Username=username
@@ -55,6 +57,7 @@ def lambda_handler(event, context):
         dynamodb = boto3.resource('dynamodb')
 
         bucket_name = os.environ["BucketName"]
+        print(bucket_name)
         prefix = inviter + "/"
 
         response = s3.list_objects_v2(
@@ -73,19 +76,20 @@ def lambda_handler(event, context):
             if obj.get('Key'):
                 content.append(obj['Key'])
 
-        table_name = os.environ["SharingTable"]
+        table_name = os.environ["SharingTableName"]
+        print(table_name)
         table = dynamodb.Table(table_name)
 
         item = {
             'id': username,
             'shared_content': content
         }
-
+        print(content)
         response = table.put_item(Item=item)
 
         return {
             'statusCode': 200,
-            'body': 'Family member verified'
+            'body': json.dumps('Family member verified')
         }
 
     except Exception as e:

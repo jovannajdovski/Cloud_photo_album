@@ -16,7 +16,7 @@ def lambda_handler(event, context):
     invited_username = input_data['username']
     invite_id = input_data['inviteId']
 
-    verifyLink = os.environ["Link"] + '/invite/verify?inviteId=' + invite_id + '&inviter=' + sender + '&username=' + invited_username
+    verifyLink = 'http:localhost:4200/confirm-invite?inviteId=' + invite_id + '&inviter=' + sender + '&username=' + invited_username
 
     message_body = '<html><body><p>Hello ' + sender + ',</p><p>Confirm that you invite family member ' + invited_user_email + ' to our application. All your data and content will be shared with him! Please click the link below to verify your family member: </p> <p> <a href="' + verifyLink + '">Click here</a> for verification</p></body></html>'
 
