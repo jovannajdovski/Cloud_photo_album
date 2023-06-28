@@ -1,0 +1,23 @@
+<div id="background">
+    <div id="container">
+        <div class="holder" *ngIf="!hasError">
+
+            <span id="mail-icon" class="iconify" data-icon="ic:round-mark-email-read"></span>
+
+            <h1>Your invitation has been successfully verified</h1>
+            <h3>Your family member can now log in.</h3>
+
+        </div>
+
+        <div *ngIf="hasError" class="invalid holder">
+
+            <span id="mail-icon-error" class="iconify" data-icon="mdi:email-alert"></span>
+
+            <h1>Your invitation has an invalid token</h1>
+            <h3>Check your invitation again.</h3>
+
+        </div>
+
+    </div>
+    
+</div>

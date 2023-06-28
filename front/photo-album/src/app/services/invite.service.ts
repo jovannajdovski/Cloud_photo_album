@@ -51,4 +51,16 @@ export class InviteService {
 
   }
 
+
+  confirmInvite(invite_id:string, sender:string, invited_username: string):Observable<string>{
+
+    console.log(invite_id);
+    const params = new HttpParams()
+    .set('invite_id', invite_id)
+    .set('sender', sender)
+    .set('invited_username', invited_username);
+
+    return this.httpClient.get<string>('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/invite/verify',{params: params});
+
+  }
 }
