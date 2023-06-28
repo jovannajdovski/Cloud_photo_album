@@ -11,7 +11,7 @@ import { API } from 'aws-amplify';
 })
 export class DownloadService {
 
-  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) { 
+  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) {
     Amplify.configure({
       Auth: environment.cognito
     })
@@ -33,16 +33,16 @@ export class DownloadService {
         }
         const token = session.getAccessToken().getJwtToken();
         const header = new HttpHeaders();
-        
+
         header.append('Authorization', token);
         console.log("HEADER");
         console.log(header);
-        return this.httpClient.get('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/download?key='+file_path,{headers:header});
+        return this.httpClient.get('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/download?key='+file_path,{headers:header});
       });
     }
-    
-    return this.httpClient.get('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/download?key='+file_path,{headers:header});
-      
+
+    return this.httpClient.get('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/download?key='+file_path,{headers:header});
+
   }
   private getAuthHeader(): Promise<string> {
     return Auth.currentSession().then(session => {

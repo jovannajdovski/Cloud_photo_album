@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 })
 export class AlbumService {
 
-  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) { 
+  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) {
     Amplify.configure({
       Auth: environment.cognito
     })
@@ -29,8 +29,8 @@ export class AlbumService {
       "user":user,
       "new_album":album,
     };
-    
-    return this.httpClient.post('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/album',newAlbum,{headers:header});
+
+    return this.httpClient.post('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/album',newAlbum,{headers:header});
 
   }
 
@@ -44,8 +44,8 @@ export class AlbumService {
     const params = new HttpParams()
     .set('user', user)
     .set('album_to_delete', albumToDelete);
-    
-    return this.httpClient.delete('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header, params});
+
+    return this.httpClient.delete('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header, params});
 
   }
 
@@ -59,7 +59,7 @@ export class AlbumService {
     const params = new HttpParams()
     .set('prefix', prefix);
 
-    return this.httpClient.get<string[]>('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header,params: params});
+    return this.httpClient.get<string[]>('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header,params: params});
 
   }
 }

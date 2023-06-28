@@ -11,7 +11,7 @@ import { FamilyMemberUser } from '../models/user';
 })
 export class InviteService {
 
-  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) { 
+  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) {
     Amplify.configure({
       Auth: environment.cognito
     })
@@ -30,8 +30,8 @@ export class InviteService {
       "sender":sender,
       "invited_user":invitedUser,
     };
-    
-    return this.httpClient.post('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/invite',invitation,{headers:header});
+
+    return this.httpClient.post('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/invite',invitation,{headers:header});
 
   }
 
@@ -46,8 +46,8 @@ export class InviteService {
       "birth_date":user.birthDate,
       "family_member_username":user.familyMemberUsername,
     };
-    
-    return this.httpClient.post('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/invite/register',registration);
+
+    return this.httpClient.post('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/invite/register',registration);
 
   }
 

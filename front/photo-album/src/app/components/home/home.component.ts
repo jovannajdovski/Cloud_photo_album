@@ -51,7 +51,7 @@ export class HomeComponent implements OnInit {
     this.cognitoService.getSession()
     .then((user:any) => {
       if(user){
-        
+
       }
       else{
         this.router.navigate(['/log-in']);
@@ -69,8 +69,8 @@ export class HomeComponent implements OnInit {
               this.albums = [];
               this.albums.push({name:'initial album', readonly:false, initial:true, path:""});
               this.albums.push({name:'shared', readonly:true, initial:false, path:""});
-              if (result.body.length !== 0) {
-                result.body.forEach((album: string) => {
+              if (result.length !== 0) {
+                result.forEach((album: string) => {
                   this.albums.push({name: album, readonly:false, initial:false, path:""});
                 });
               }
@@ -84,8 +84,8 @@ export class HomeComponent implements OnInit {
             next: (result: any) => {
               console.log(result);
               this.files = [];
-              if (result.body.length !== 0) {
-                result.body.forEach((file: {name:string, updated:Date}) => {
+              if (result.length !== 0) {
+                result.forEach((file: {name:string, updated:Date}) => {
                   this.files.push({name:file.name, "updated":file.updated, readonly:false, path:""});
                 });
               }
@@ -136,7 +136,7 @@ export class HomeComponent implements OnInit {
     } else {
       this.newAlbumPrefix = this.currPrefix + album + "/";
     }
-    
+
     const dialogRef = this.dialog.open(AlbumNameDialogComponent, {
       width: '400px',
       height: '280px'
@@ -270,8 +270,8 @@ export class HomeComponent implements OnInit {
         if(isInitial){
           this.albums.push({name:'shared', readonly:true, initial:false, path:''});
         }     
-        if (result.body.length !== 0) {
-          result.body.forEach((album: string) => {
+        if (result.length !== 0) {
+          result.forEach((album: string) => {
             this.albums.push({name:album, readonly:false, initial:false, path:''});
           });
         }
@@ -285,8 +285,8 @@ export class HomeComponent implements OnInit {
       next: (result: any) => {
         console.log(result);
         this.files = [];
-        if (result.body.length !== 0) {
-          result.body.forEach((file: {name:string, updated:Date}) => {
+        if (result.length !== 0) {
+          result.forEach((file: {name:string, updated:Date}) => {
             this.files.push({name:file.name, "updated":file.updated, readonly:false, path:''});
           });
         }
@@ -345,7 +345,7 @@ export class HomeComponent implements OnInit {
       next: (result: any) => {
         console.log('svi');
         console.log(result);
-        let userList = result.body;
+        let userList = result;
         this.cognitoService.getUser()
         .then((user:any) => {
           if(user){
@@ -357,7 +357,7 @@ export class HomeComponent implements OnInit {
               height: '350px',
               data: { users: userList }
             });
-    
+
             dialogRef.afterClosed().subscribe((user: string) => {
               if(user!==undefined){
                 this.sharingService.shareContent(user, this.sharedPrefix).subscribe({
@@ -367,7 +367,7 @@ export class HomeComponent implements OnInit {
                     }else {
                       this.openSnackBar("Shared content successfully added");
                     }
-                    
+
                   },
                   error: (error) => {
                     console.error(error);
@@ -403,7 +403,7 @@ export class HomeComponent implements OnInit {
     this.sharingService.getUsersForSharedContent(this.sharedPrefix).subscribe({
       next: (result:any) => {
         console.log(result);
-        let sharedWithUsers = result.body;
+        let sharedWithUsers = result;
 
         if(sharedWithUsers.length === 0){
           this.openSnackBar("This content is not shared");
@@ -414,7 +414,7 @@ export class HomeComponent implements OnInit {
           height: '350px',
           data: { users: sharedWithUsers }
         });
-    
+
         dialogRef.afterClosed().subscribe((user: string) => {
           if (user!==undefined){
             this.sharingService.removeSharedContent(user, this.sharedPrefix).subscribe({
@@ -436,7 +436,7 @@ export class HomeComponent implements OnInit {
     });
 
 
-    
+
 
   }
   public edit_file(file: any)
@@ -448,7 +448,7 @@ export class HomeComponent implements OnInit {
       description: '',
       file_path: this.currPrefix+file.name
     };
-  
+
     const dialogRef = this.dialog.open(EditContentDialogComponent, {
       data: dialogData,
     });
@@ -486,7 +486,7 @@ export class HomeComponent implements OnInit {
     (await this.downloadService.sendToApiGateway(file_path)).subscribe({
       next: (result) => {
         console.log('primio')
-        /*const data = result.body; // Assuming 'result' contains the file data
+        /*const data = result; // Assuming 'result' contains the file data
 
         const blob = new Blob([data], { type: 'application/octet-stream' });
 
@@ -501,8 +501,8 @@ export class HomeComponent implements OnInit {
         link.click();
 
         URL.revokeObjectURL(url);*/
-        const fileData = result.body; // Assuming 'result' contains the file data
-
+        const fileData = result; // Assuming 'result' contains the file data
+        console.log(fileData);
         const zip = new JSZip();
         zip.file(file.name, fileData); // Add the file to the ZIP archive
 
@@ -519,5 +519,5 @@ export class HomeComponent implements OnInit {
       },
     });
   }
-  
+
 }

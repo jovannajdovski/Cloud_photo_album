@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 })
 export class SharingService {
 
-  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) { 
+  constructor(private httpClient:HttpClient,private cognitoService:CognitoService) {
   }
 
   shareContent(user:string,newSharingContent:string):Observable<any>{
@@ -22,8 +22,8 @@ export class SharingService {
       "user":user,
       "new_sharing_content":newSharingContent,
     };
-    
-    return this.httpClient.post('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/sharing',sharedContent,{headers:header});
+
+    return this.httpClient.post('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/sharing',sharedContent,{headers:header});
 
   }
 
@@ -37,8 +37,8 @@ export class SharingService {
     const params = new HttpParams()
     .set('user', user)
     .set('shared_content_to_remove', sharedContentToRemove);
-    
-    return this.httpClient.delete('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/sharing',{headers:header, params});
+
+    return this.httpClient.delete('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/sharing',{headers:header, params});
 
   }
 
@@ -52,7 +52,7 @@ export class SharingService {
     const params = new HttpParams()
     .set('content', content);
 
-    return this.httpClient.get<string[]>('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/sharing/users',{headers:header,params: params});
+    return this.httpClient.get<string[]>('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/sharing/users',{headers:header,params: params});
 
   }
 
@@ -66,7 +66,7 @@ export class SharingService {
     const params = new HttpParams()
     .set('user', user);
 
-    return this.httpClient.get<string[]>('https://hld2whhm50.execute-api.eu-central-1.amazonaws.com/Dev/sharing',{headers:header,params: params});
+    return this.httpClient.get<string[]>('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/sharing',{headers:header,params: params});
 
   }
 }
