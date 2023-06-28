@@ -1,0 +1,52 @@
+<div class="container">
+
+    <div class="row w-100 vh-100 justify-content-center align-items-center">
+        <div class="auth-box">
+
+            <!-- sign-up -->
+
+            <div *ngIf="!isConfirm">
+
+                <div class="header">
+                    <h2>Register</h2>
+                    <h4>Register your account using below information</h4>
+                </div>
+
+                <div class="form">
+                    <input type="text" name="userName" [(ngModel)]="user.username" placeholder="Username">
+                    <input type="text" name="givenName" [(ngModel)]="user.givenName" placeholder="First Name">
+                    <input type="text" name="familyName" [(ngModel)]="user.familyName" placeholder="Last Name">
+                    <input type="email" name="email" [(ngModel)]="user.email" placeholder="Email" autocomplete="off">
+                    <input type="date" name="birthDate" [(ngModel)]="user.birthDate" placeholder="Birth Date">
+                    <input [type]="user.showPassword ? 'text' : 'password'" name="password" [(ngModel)]="user.password"
+                        placeholder="Password">
+                    <div class="show-pass">
+                        <input type="checkbox" [checked]="user.showPassword"
+                            (change)="user.showPassword = !user.showPassword">
+                        Show Password
+                    </div>
+                    <p>Already a member? <a href="/log-in">Log in</a></p>
+                    <button (click)="signUpWithCognito()">SIGN UP</button>
+                </div>
+            </div>
+
+            <!-- confirm sign-up -->
+
+            <div *ngIf="isConfirm">
+                <div class="header">
+                    <h2>Enter code</h2>
+                    <h4 id="ver-email">A verification code sent to {{user.email}}</h4>
+                </div>
+
+                <div class="form">
+                    <input type="text" name="verificationCOde" [(ngModel)]="user.code"
+                        placeholder="Enter verification code">
+                    <button (click)="confirmSignUp()">CONFIRM</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<app-succ-or-fail-message *ngIf="showAlert" (modalCLose)="showAlert=false" [message]="alertMessage"></app-succ-or-fail-message> 

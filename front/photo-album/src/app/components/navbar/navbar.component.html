@@ -1,0 +1,30 @@
+<div *ngIf="isLogged" id="navbar">
+    <div id="pre-div"></div>
+    <!-- <img id="logo" src="../../../../src/assets/images/multi2.png" alt="SIRFIV logo"> -->
+    <h1 id="title">SIRFIV</h1>
+    <!-- <app-registered-navbar *ngIf="role === 'REGISTERED_USER'"></app-administrator-navbar>
+    <app-unregistered-user-navbar *ngIf="role === 'UNREGISTERED_USER'"></app-unregistered-user-navbar> -->
+
+    <div class="navigation">
+
+        <a class="button" (click)="addContent()">
+            <mat-icon class="option-icon">add_circle</mat-icon>
+            <div class="option">ADD CONTENT</div>
+        </a>
+
+        <a class="button" (click)="createAlbum()">
+            <mat-icon class="option-icon">create_new_folder</mat-icon>
+            <div class="option">CREATE ALBUM</div>
+        </a>
+
+        <a class="button" (click)="inviteFamilyMember()">
+            <mat-icon class="option-icon">person_add</mat-icon>
+            <div class="option">INVITE FAMILY MEMBER</div>
+        </a>
+
+        <a class="button">
+            <img src="../../../assets/images/user.png">
+            <div class="logout" (click)="signOutWithCognito()">LOGOUT</div>
+        </a>
+    </div>
+</div>

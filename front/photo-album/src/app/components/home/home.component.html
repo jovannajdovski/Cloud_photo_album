@@ -1,0 +1,106 @@
+<!-- <div class="navigation">
+  <a class="button">
+    <img src="../../../assets/images/user.png">
+    <div class="logout" (click)="signOutWithCognito()">LOGOUT</div>
+  </a>
+</div> -->
+
+<div class="user-content">
+  <mat-card class="card-content">
+    <h2>Content</h2>
+
+    <div class="list">
+      <div class="subheader">Albums</div>
+      <div class="list-item" *ngFor="let album of albums">
+        <div class="item">
+          <mat-icon class="item-info icon-size">folder</mat-icon>
+          <div class="item-info">
+            <div>{{album.name}}</div>
+            <!-- <div class="item-date">{{album.updated | date}}</div> -->
+          </div>
+        </div>
+
+
+
+        <button class="item-action" mat-icon-button [matMenuTriggerFor]="menuAlbum"
+          aria-label="Example icon-button with a menu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menuAlbum="matMenu">
+          <button mat-menu-item (click)="viewAlbum(album)">
+            <mat-icon>visibility</mat-icon>
+            <span>View Content</span>
+          </button>
+          <button mat-menu-item (click)="shareContent(album.name,true)" [disabled]="album.readonly || album.initial">
+            <mat-icon>leak_add</mat-icon>
+            <span>Share</span>
+          </button>
+          <button mat-menu-item (click)="removeSharedContent(album.name,true)" [disabled]="album.readonly || album.initial">
+            <mat-icon>leak_remove</mat-icon>
+            <span>Stop Sharing</span>
+          </button>
+          <button mat-menu-item (click)="deleteAlbum(album.name)" [disabled]="album.readonly || album.initial">
+            <mat-icon>delete</mat-icon>
+            <span>Remove</span>
+          </button>
+          <button mat-menu-item (click)="addContentToAlbum(album.name)" [disabled]="album.readonly">
+            <mat-icon>add_circle</mat-icon>
+            <span>Add new content</span>
+          </button>
+          <button mat-menu-item (click)="createAlbum(album.name)" [disabled]="album.readonly">
+            <mat-icon>create_new_folder</mat-icon>
+            <span>Add new album</span>
+          </button>
+          
+        </mat-menu>
+
+      </div>
+
+
+      <hr class="divider"/>
+
+
+      <div class="subheader">Files</div>
+      <div *ngFor="let file of files" class="list-item">
+        <div class="item">
+          <mat-icon class="item-info icon-size">note</mat-icon>
+          <div class="item-info">
+            <div>{{file.name}}</div>
+            <div class="item-date">{{file.updated | date}}</div>
+          </div>
+        </div>
+
+
+
+        <button class="item-action" mat-icon-button [matMenuTriggerFor]="menuAlbum"
+          aria-label="Example icon-button with a menu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menuAlbum="matMenu">
+          
+          <button (click)="edit_file(file)" mat-menu-item [disabled]="file.readonly">
+            <mat-icon>edit</mat-icon>
+            <span>Edit</span>
+          </button>
+          <button mat-menu-item (click)="shareContent(file.name,false)" [disabled]="file.readonly">
+            <mat-icon>leak_add</mat-icon>
+            <span>Share</span>
+          </button>
+          <button mat-menu-item (click)="removeSharedContent(file.name,false)" [disabled]="file.readonly">
+            <mat-icon>leak_remove</mat-icon>
+            <span>Stop Sharing</span>
+          </button>
+          <button (click)="remove_file(file)" mat-menu-item [disabled]="file.readonly">
+            <mat-icon>delete</mat-icon>
+            <span>Remove</span>
+          </button>
+          <button mat-menu-item (click)="download_file(file)">
+            <mat-icon>get_app</mat-icon>
+            <span>Download</span>
+          </button>
+        </mat-menu>
+
+      </div>
+    </div>
+  </mat-card>
+</div>

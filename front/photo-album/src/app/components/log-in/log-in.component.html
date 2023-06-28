@@ -1,0 +1,63 @@
+<div class="container" *ngIf="user">
+    <div class="row w-100 vh-100 justify-content-center align-items-center">
+        <div class="auth-box">
+
+            <!-- log in -->
+
+            <div *ngIf="!isForgotPassword">
+
+                <div class="header">
+                    <h2>Welcome back</h2>
+                    <h4>Log in to your account using username and password</h4>
+                </div>
+
+
+                <div class="form">
+                    <input type="text" name="username" placeholder="Username" [(ngModel)]="user.username"
+                        autocomplete="off">
+                    <input [type]="user.showPassword ? 'text' : 'password'" name="password" [(ngModel)]="user.password"
+                        placeholder="Password">
+
+                    <div class="show-pass">
+                        <input type="checkbox" [checked]="user.showPassword"
+                            (change)="user.showPassword = !user.showPassword">
+                        Show Password
+                    </div>
+
+                    <p class="forgot-password" (click)="forgotPasswordClicked()">Forgot password</p>
+
+                    <p>Not a member? <a href="/sign-up">Sign up</a></p>
+                    <button (click)="logInWithCognito()">LOGIN</button>
+                </div>
+
+            </div>
+            <!-- forgot password -->
+            <div *ngIf="isForgotPassword">
+                <div class="header">
+                    <h2>Account recovery</h2>
+                    <h4>Verification code sent to <strong>your mail</strong></h4>
+                    <!-- <h4>Verification code sent to <strong>{{user.email}}</strong></h4> -->
+                </div>
+
+                <div class="form">
+                    <input type="text" name="verificationCode" placeholder="Enter verification code"
+                        [(ngModel)]="user.code">
+                    <input [type]="user.showPassword ? 'text' : 'password'" name="password" [(ngModel)]="newPassword"
+                        placeholder="Enter new password">
+
+                    <div class="show-pass-forgot">
+                        <input type="checkbox" [checked]="user.showPassword"
+                            (change)="user.showPassword = !user.showPassword">
+                        Show Password
+                    </div>
+
+                    <button (click)="newPasswordSubmit()">SUBMIT NEW PASSWORD</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<app-succ-or-fail-message *ngIf="showAlert" (modalCLose)="showAlert=false"
+    [message]="alertMessage"></app-succ-or-fail-message>

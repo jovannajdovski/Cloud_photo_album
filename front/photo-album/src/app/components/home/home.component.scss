@@ -1,0 +1,108 @@
+.navigation {
+    width: 100%;
+    background-color: #00dba4;
+}
+
+img {
+    width: 25px;
+    border-radius: 50px;
+    float: left;
+}
+
+.logout {
+    font-size: .8em;
+    position: relative;
+    right: -8px;
+    bottom: -4px;
+    overflow: hidden;
+    letter-spacing: 3px;
+}
+
+.button {
+    text-decoration: none;
+    float: right;
+    padding: 12px;
+    margin: 15px;
+    color: white;
+    width: 100px;
+    background-color: #00dba4;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.user-content {
+    padding: 100px;
+}
+
+.card-content{
+    padding: 50px;
+    border-radius: 10px;
+    max-width: 800px;
+    border: 2px solid #00dba4;
+    box-shadow: rgba(0, 219, 164,0.15) 0px 48px 100px 0px;
+}
+
+.list{
+    display: flex;
+    flex-direction: column;
+    
+}
+
+.divider{
+    margin: 0px; 
+    max-width: 800px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border-color: #c0ffef;
+}
+
+.list-item{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+    justify-content: space-between;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    max-width: 800px;
+}
+
+.list-item:hover, .list-item:focus{
+    background-color: rgb(152, 243, 190);
+    color: rgb(17, 17, 17);
+    transform: scale(1.01);
+}
+
+.item{
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+}
+
+.item-info{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-right: 20px;
+    margin-left: 5px;
+}
+
+.item-date{
+    font-size: 12px;
+    font-weight: 200;
+}
+
+.icon-size{
+    font-size: 30px;
+}
+
+.item-action{
+    justify-content: right;
+    justify-self: right;
+}
+
+.subheader{
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-size: 16px;
+}

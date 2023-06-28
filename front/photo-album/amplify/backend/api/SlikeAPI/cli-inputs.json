@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "paths": {
+    "/": {
+      "name": "/",
+      "lambdaFunction": "photoalbum4d2394db",
+      "permissions": {
+        "setting": "open"
+      }
+    }
+  }
+}
