@@ -551,6 +551,7 @@ Resources:
                 - AmazonSNSFullAccess
                 - AmazonS3FullAccess
                 - AWSLambdaBasicExecutionRole
+                - AmazonSQSFullAccess
             Events:
                 ApiEvent:
                     Type: Api
@@ -582,14 +583,47 @@ Resources:
                 - AmazonS3FullAccess
                 - AmazonSNSFullAccess
                 - AWSLambdaBasicExecutionRole
+                - AmazonSQSFullAccess
             Environment:
                 Variables:
                     BucketName: !Ref PhotoBucket
             Events:
-                AlbumDeleteTopicEvent:
-                    Type: SNS
+                EditS3SQSEvent:
+                    Type: SQS
                     Properties:
-                        Topic: !Ref FileEditTopic
+                        Queue: !GetAtt EditS3Queue.Arn
+                        BatchSize: 1
+                        Enabled: True
+
+
+    MySQSQueueAccessPolicy:
+        Type: AWS::SQS::QueuePolicy
+        Properties:
+            Queues:
+                - !Ref EditS3Queue
+                - !Ref EditDDBQueue
+            PolicyDocument:
+                {
+                  "Version": "2012-10-17",
+                  "Id": "arn:aws:sqs:eu-central-1:205030087586:edit-s3-queue/SQSDefaultPolicy",
+                  "Statement": [
+                    {
+                      "Sid": "AllowSNSReceive",
+                      "Effect": "Allow",
+                      "Principal": "*",
+                      "Action": "sqs:SendMessage",
+                      "Resource": !GetAtt EditS3Queue.Arn,
+                    },
+                      {
+                          "Sid": "AllowSNSReceive",
+                          "Effect": "Allow",
+                          "Principal": "*",
+                          "Action": "sqs:SendMessage",
+                          "Resource": !GetAtt EditDDBQueue.Arn,
+                      }
+                  ]
+                }
+
 
 
 
@@ -605,15 +639,30 @@ Resources:
                 - AWSLambdaBasicExecutionRole
                 - AmazonDynamoDBFullAccess
                 - AmazonSNSFullAccess
+                - AmazonSQSFullAccess
             Environment:
                 Variables:
                     TableName: !Ref PhotoMetadataTable
                     BucketName: !Ref PhotoBucket
             Events:
-                AlbumDeleteTopicTopicEvent:
-                    Type: SNS
+                EditDDBSQSEvent:
+                    Type: SQS
                     Properties:
-                        Topic: !Ref FileEditTopic
+                        Queue: !GetAtt EditDDBQueue.Arn
+                        BatchSize: 1
+                        Enabled: True
+
+    EditS3Queue:
+        Type: 'AWS::SQS::Queue'
+        Properties:
+            QueueName: edit-s3-queue
+
+
+
+    EditDDBQueue:
+        Type: 'AWS::SQS::Queue'
+        Properties:
+            QueueName: edit-ddb-queue
 
 
 
@@ -622,19 +671,20 @@ Resources:
         Properties:
             DisplayName: file_edit
 
-    EditFileSubscription:
-        Type: AWS::SNS::Subscription
-        Properties:
-            TopicArn: !Ref FileEditTopic
-            Protocol: lambda
-            Endpoint: !GetAtt EditFileFunction.Arn
-    EditFileMetadataSubscription:
-        Type: AWS::SNS::Subscription
-        Properties:
-            TopicArn: !Ref FileEditTopic
-            Protocol: lambda
-            Endpoint: !GetAtt EditFileMetadataFunction.Arn
 
+    EditDDBSNSTopicSubscription:
+        Type: 'AWS::SNS::Subscription'
+        Properties:
+            TopicArn: !Ref FileEditTopic
+            Protocol: sqs
+            Endpoint: !GetAtt EditDDBQueue.Arn
+
+    EditS3SNSTopicSubscription:
+        Type: 'AWS::SNS::Subscription'
+        Properties:
+            TopicArn: !Ref FileEditTopic
+            Protocol: sqs
+            Endpoint: !GetAtt EditS3Queue.Arn
 
     FileDeleteTopic:
         Type: AWS::SNS::Topic

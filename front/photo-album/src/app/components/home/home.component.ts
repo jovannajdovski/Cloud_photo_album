@@ -187,8 +187,8 @@ export class HomeComponent implements OnInit {
         this.files = [];
 
         this.albums.push({name:'initial album', readonly:false, initial:true, path:''});
-        if (result.body.length !== 0) {
-          result.body.forEach((content: string) => {
+        if (result.length !== 0) {
+          result.forEach((content: string) => {
 
             // album
             if (content.endsWith("/")){
@@ -202,12 +202,12 @@ export class HomeComponent implements OnInit {
               this.readService.getFiles(content).subscribe({
                 next: (result: any) => {
                   console.log(result);
-                  if (result.body.length == 1) {
-                    result.body.forEach((file: {name:string, updated:Date}) => {
+                  if (result.length == 1) {
+                    result.forEach((file: {name:string, updated:Date}) => {
                       this.files.push({name:fileName, "updated":file.updated, readonly:true, path:content});
                     });
                   }
-          
+
                 },
                 error: (error) => {
                   console.error(error);
@@ -215,7 +215,7 @@ export class HomeComponent implements OnInit {
               });
             }
 
-            
+
           });
         }
 
@@ -224,7 +224,7 @@ export class HomeComponent implements OnInit {
         console.error(error);
       },
     });
-    
+
   }
 
   public refreshSharedContent(sharedAlbumPath:string) {
@@ -233,8 +233,8 @@ export class HomeComponent implements OnInit {
         console.log(result);
         this.albums = [];
         this.albums.push({name:'initial album', readonly:false, initial:true, path:''});
-        if (result.body.length !== 0) {
-          result.body.forEach((album: string) => {
+        if (result.length !== 0) {
+          result.forEach((album: string) => {
             this.albums.push({name:album, readonly:true, initial:false, path:sharedAlbumPath+album+"/"});
           });
         }
@@ -248,8 +248,8 @@ export class HomeComponent implements OnInit {
       next: (result: any) => {
         console.log(result);
         this.files = [];
-        if (result.body.length !== 0) {
-          result.body.forEach((file: {name:string, updated:Date}) => {
+        if (result.length !== 0) {
+          result.forEach((file: {name:string, updated:Date}) => {
             this.files.push({name:file.name, "updated":file.updated, readonly:true, path:sharedAlbumPath+file.name});
           });
         }
@@ -269,7 +269,7 @@ export class HomeComponent implements OnInit {
         this.albums.push({name:'initial album', readonly:false, initial:true, path:''});
         if(isInitial){
           this.albums.push({name:'shared', readonly:true, initial:false, path:''});
-        }     
+        }
         if (result.length !== 0) {
           result.forEach((album: string) => {
             this.albums.push({name:album, readonly:false, initial:false, path:''});
@@ -479,10 +479,10 @@ export class HomeComponent implements OnInit {
     } else {
       file_path=this.currPrefix+file.name;
     }
-   
+
     console.log(file.name);
     console.log(file_path);
-    
+
     (await this.downloadService.sendToApiGateway(file_path)).subscribe({
       next: (result) => {
         console.log('primio')

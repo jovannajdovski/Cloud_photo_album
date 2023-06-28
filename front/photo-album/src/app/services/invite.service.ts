@@ -31,7 +31,7 @@ export class InviteService {
       "invited_user":invitedUser,
     };
 
-    return this.httpClient.post('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/invite',invitation,{headers:header});
+    return this.httpClient.post('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/invite',invitation,{headers:header});
 
   }
 
@@ -47,7 +47,7 @@ export class InviteService {
       "family_member_username":user.familyMemberUsername,
     };
 
-    return this.httpClient.post('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/invite/register',registration);
+    return this.httpClient.post('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/invite/register',registration);
 
   }
 
@@ -60,7 +60,7 @@ export class InviteService {
     .set('sender', sender)
     .set('invited_username', invited_username);
 
-    return this.httpClient.get<string>('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/invite/verify',{params: params});
+    return this.httpClient.get<string>('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/invite/verify',{params: params});
 
   }
 }

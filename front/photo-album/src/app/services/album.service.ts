@@ -30,7 +30,7 @@ export class AlbumService {
       "new_album":album,
     };
 
-    return this.httpClient.post('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/album',newAlbum,{headers:header});
+    return this.httpClient.post('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/album',newAlbum,{headers:header});
 
   }
 
@@ -45,7 +45,7 @@ export class AlbumService {
     .set('user', user)
     .set('album_to_delete', albumToDelete);
 
-    return this.httpClient.delete('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header, params});
+    return this.httpClient.delete('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header, params});
 
   }
 
@@ -59,7 +59,7 @@ export class AlbumService {
     const params = new HttpParams()
     .set('prefix', prefix);
 
-    return this.httpClient.get<string[]>('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header,params: params});
+    return this.httpClient.get<string[]>('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/album',{headers:header,params: params});
 
   }
 }

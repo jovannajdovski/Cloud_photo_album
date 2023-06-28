@@ -37,11 +37,11 @@ export class DeleteService {
         header.append('Authorization', token);
         console.log("HEADER");
         console.log(header);
-        return this.httpClient.delete('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/file?file_path='+file_path,{headers:header});
+        return this.httpClient.delete('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/file?file_path='+file_path,{headers:header});
       });
     }
 
-    return this.httpClient.delete('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/file?file_path='+file_path,{headers:header});
+    return this.httpClient.delete('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/file?file_path='+file_path,{headers:header});
 
   }
   private getAuthHeader(): Promise<string> {

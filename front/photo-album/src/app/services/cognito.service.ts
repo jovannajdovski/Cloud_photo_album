@@ -93,7 +93,7 @@ export class CognitoService {
       'Authorization': token,
     });
 
-    return this.httpClient.get<string[]>('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/users',{headers:header});
+    return this.httpClient.get<string[]>('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/users',{headers:header});
 
   }
 }

@@ -37,11 +37,11 @@ export class DownloadService {
         header.append('Authorization', token);
         console.log("HEADER");
         console.log(header);
-        return this.httpClient.get('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/download?key='+file_path,{headers:header});
+        return this.httpClient.get('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/download?key='+file_path,{headers:header});
       });
     }
 
-    return this.httpClient.get('https://oqdwha3n72.execute-api.eu-central-1.amazonaws.com/Dev/download?key='+file_path,{headers:header});
+    return this.httpClient.get('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/download?key='+file_path,{headers:header});
 
   }
   private getAuthHeader(): Promise<string> {
