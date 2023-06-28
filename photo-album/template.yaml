@@ -795,7 +795,7 @@ Resources:
 
                     SendNotification:
                         Type: Task
-                        Resource: !GetAtt SendInviteFunction.Arn
+                        Resource: !GetAtt SendNotificationFunction.Arn
                         Next: WaitForVerification
 
                     WaitForVerification:
@@ -825,11 +825,11 @@ Resources:
                 Variables:
                     UserPoolId: !Ref PhotoAlbumUsersPool
 
-    SendInviteFunction:
+    SendNotificationFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
             CodeUri: invite/
-            Handler: invite_family_member.lambda_handler
+            Handler: send_notification_family.lambda_handler
             Runtime: python3.9
             Architectures:
                 - x86_64
@@ -842,13 +842,14 @@ Resources:
                 Variables:
                     UserPoolId: !Ref PhotoAlbumUsersPool
                     FamilyTableName: !Ref FamilyTable
+                    Link: "http:\\localhost:4200\"
 
 
     VerifyFamilyFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
             CodeUri: invite/
-            Handler: invite_family_member.lambda_handler
+            Handler: verify_user_family.lambda_handler
             Runtime: python3.9
             Architectures:
                 - x86_64
