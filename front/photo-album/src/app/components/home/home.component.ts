@@ -29,10 +29,8 @@ export class HomeComponent implements OnInit {
   newFilePrefix: string='';
   sharedPrefix: string = '';
 
-  albums: string[] = [];
-  files: {name:string, updated:Date}[]=[];
-
-
+  albums: {name:string, readonly:boolean, initial:boolean, path:string}[] = [];
+  files: {name:string, updated:Date, readonly:boolean, path:string}[]=[];
 
 
   constructor(private router: Router,
@@ -69,11 +67,11 @@ export class HomeComponent implements OnInit {
             next: (result: any) => {
               console.log(result);
               this.albums = [];
-              this.albums.push('initial album');
-
+              this.albums.push({name:'initial album', readonly:false, initial:true, path:""});
+              this.albums.push({name:'shared', readonly:true, initial:false, path:""});
               if (result.length !== 0) {
                 result.forEach((album: string) => {
-                  this.albums.push(album);
+                  this.albums.push({name: album, readonly:false, initial:false, path:""});
                 });
               }
 
@@ -88,7 +86,7 @@ export class HomeComponent implements OnInit {
               this.files = [];
               if (result.length !== 0) {
                 result.forEach((file: {name:string, updated:Date}) => {
-                  this.files.push({name:file.name, "updated":file.updated});
+                  this.files.push({name:file.name, "updated":file.updated, readonly:false, path:""});
                 });
               }
 
@@ -161,25 +159,120 @@ export class HomeComponent implements OnInit {
 
   }
 
-  public viewAlbum(album: string) {
-    if (album == "initial album") {
-      this.currPrefix = this.username + "/";
-    } else {
-      this.currPrefix += album + "/";
+  public viewAlbum(album: {name:string, readonly:boolean, initial:boolean, path:string}) {
+    if (album.name == "shared"){
+      this.loadSharedContent();
+      return;
     }
 
-    this.refreshAlbums();
+    if (album.readonly == true){
+      this.refreshSharedContent(album.path);
+      return;
+    }
+
+    if (album.name == "initial album") {
+      this.currPrefix = this.username + "/";
+      this.refreshAlbums(true);
+    } else {
+      this.currPrefix += album.name + "/";
+      this.refreshAlbums(false);
+    }
   }
 
-  public refreshAlbums() {
+  public loadSharedContent(){
+    this.sharingService.getContentSharedWithUser(this.username).subscribe({
+      next: (result: any) => {
+        console.log(result);
+        this.albums = [];
+        this.files = [];
+
+        this.albums.push({name:'initial album', readonly:false, initial:true, path:''});
+        if (result.body.length !== 0) {
+          result.body.forEach((content: string) => {
+
+            // album
+            if (content.endsWith("/")){
+              const segments = content.split('/');
+              const album = segments[segments.length - 2];
+              this.albums.push({name:album, readonly:true, initial:false, path:content});
+            } else {   //file
+              const segments = content.split('/');
+              const fileName = segments[segments.length - 1];
+
+              this.readService.getFiles(content).subscribe({
+                next: (result: any) => {
+                  console.log(result);
+                  if (result.body.length == 1) {
+                    result.body.forEach((file: {name:string, updated:Date}) => {
+                      this.files.push({name:fileName, "updated":file.updated, readonly:true, path:content});
+                    });
+                  }
+          
+                },
+                error: (error) => {
+                  console.error(error);
+                },
+              });
+            }
+
+            
+          });
+        }
+
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+    
+  }
+
+  public refreshSharedContent(sharedAlbumPath:string) {
+    this.albumService.getAlbum(sharedAlbumPath).subscribe({
+      next: (result: any) => {
+        console.log(result);
+        this.albums = [];
+        this.albums.push({name:'initial album', readonly:false, initial:true, path:''});
+        if (result.body.length !== 0) {
+          result.body.forEach((album: string) => {
+            this.albums.push({name:album, readonly:true, initial:false, path:sharedAlbumPath+album+"/"});
+          });
+        }
+
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+    this.readService.getFiles(sharedAlbumPath).subscribe({
+      next: (result: any) => {
+        console.log(result);
+        this.files = [];
+        if (result.body.length !== 0) {
+          result.body.forEach((file: {name:string, updated:Date}) => {
+            this.files.push({name:file.name, "updated":file.updated, readonly:true, path:sharedAlbumPath+file.name});
+          });
+        }
+
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
+  public refreshAlbums(isInitial:boolean) {
     this.albumService.getAlbum(this.currPrefix).subscribe({
       next: (result: any) => {
         console.log(result);
         this.albums = [];
-        this.albums.push('initial album');
+        this.albums.push({name:'initial album', readonly:false, initial:true, path:''});
+        if(isInitial){
+          this.albums.push({name:'shared', readonly:true, initial:false, path:''});
+        }     
         if (result.length !== 0) {
           result.forEach((album: string) => {
-            this.albums.push(album);
+            this.albums.push({name:album, readonly:false, initial:false, path:''});
           });
         }
 
@@ -194,7 +287,7 @@ export class HomeComponent implements OnInit {
         this.files = [];
         if (result.length !== 0) {
           result.forEach((file: {name:string, updated:Date}) => {
-            this.files.push({name:file.name, "updated":file.updated});
+            this.files.push({name:file.name, "updated":file.updated, readonly:false, path:''});
           });
         }
 
@@ -213,7 +306,7 @@ export class HomeComponent implements OnInit {
     this.albumService.deleteAlbum(this.username, album).subscribe({
       next: (result: string[]) => {
         console.log(result);
-        const index = this.albums.indexOf(album);
+        const index = this.albums.indexOf({name:album, readonly:false, initial:false, path:''});
         this.albums.splice(index, 1);
         //this.refreshAlbums();
         this.openSnackBar("Album " + album + " successfully deleted");
@@ -380,7 +473,16 @@ export class HomeComponent implements OnInit {
   }
   async download_file(file: any)
   {
-    var file_path=this.currPrefix+file.name;
+    let file_path;
+    if (file.readonly){
+      file_path=file.path;
+    } else {
+      file_path=this.currPrefix+file.name;
+    }
+   
+    console.log(file.name);
+    console.log(file_path);
+    
     (await this.downloadService.sendToApiGateway(file_path)).subscribe({
       next: (result) => {
         console.log('primio')

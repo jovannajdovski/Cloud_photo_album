@@ -22,6 +22,7 @@ import { ShareContentDialogComponent } from './components/share-content-dialog/s
 import { RemoveSharedContentDialogComponent } from './components/remove-shared-content-dialog/remove-shared-content-dialog.component';
 import { InviteFamilyMemberDialogComponent } from './components/invite-family-member-dialog/invite-family-member-dialog.component';
 import { FamilyMemberRegistrationComponent } from './components/family-member-registration/family-member-registration.component';
+import { ConfirmInviteComponent } from './components/confirm-invite/confirm-invite.component';
 
 
 @NgModule({
@@ -38,7 +39,8 @@ import { FamilyMemberRegistrationComponent } from './components/family-member-re
     ShareContentDialogComponent,
     RemoveSharedContentDialogComponent,
     InviteFamilyMemberDialogComponent,
-    FamilyMemberRegistrationComponent
+    FamilyMemberRegistrationComponent,
+    ConfirmInviteComponent
   ],
   imports: [
     BrowserModule,
