@@ -1,0 +1,31 @@
+<div class="container">
+
+    <div class="row w-100 vh-100 justify-content-center align-items-center">
+        <div class="auth-box">
+
+            <!-- sign-up -->
+            <div class="header">
+                <h2>Register</h2>
+                <h4>Register your account, then wait for family member to verify you</h4>
+            </div>
+
+            <div class="form">
+                <input type="text" name="userName" [(ngModel)]="user.username" placeholder="Username">
+                <input type="text" name="givenName" [(ngModel)]="user.givenName" placeholder="First Name">
+                <input type="text" name="familyName" [(ngModel)]="user.familyName" placeholder="Last Name">
+                <input type="email" name="email" [(ngModel)]="user.email" placeholder="Email" autocomplete="off">
+                <input type="date" name="birthDate" [(ngModel)]="user.birthDate" placeholder="Birth Date">
+                <input [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="user.password"
+                    placeholder="Password">
+                <div class="show-pass">
+                    <input type="checkbox" [checked]="showPassword"
+                        (change)="showPassword = !showPassword">
+                    Show Password
+                </div>
+                <input type="text" name="familyMemberUsername" [(ngModel)]="user.familyMemberUsername" placeholder="Family Member Username">
+                <button (click)="signUpFamilyMember()">REGISTER</button>
+            </div>
+
+        </div>
+    </div>
+</div>
