@@ -42,6 +42,22 @@ Resources:
                 WriteCapacityUnits: 5
             BillingMode: PROVISIONED
 
+    FamilyTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: photo-invite
+            AttributeDefinitions:
+                -   AttributeName: id
+                    AttributeType: S
+            KeySchema:
+                -   AttributeName: id
+                    KeyType: HASH
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
+            BillingMode: PROVISIONED
+
+
     PhotoBucket:
         Type: AWS::S3::Bucket
 
@@ -395,8 +411,8 @@ Resources:
                         Method: GET
                         RestApiId: !Ref MyApi
                         RequestParameters:
-                            - method.request.querystring.key:
-                                  Required: true
+                            -   method.request.querystring.key:
+                                    Required: true
             Environment:
                 Variables:
                     BucketName: !Ref PhotoBucket
@@ -422,8 +438,8 @@ Resources:
                         Method: GET
                         RestApiId: !Ref MyApi
                         RequestParameters:
-                            - method.request.querystring.prefix:
-                                  Required: true
+                            -   method.request.querystring.prefix:
+                                    Required: true
             Environment:
                 Variables:
                     BucketName: !Ref PhotoBucket
@@ -752,7 +768,201 @@ Resources:
     #                AllowOrigin: "'*'"
 
 
-#TODO step functions
+    #TODO step functions
+
+    #      Environment:
+    #        Variables:
+    #          ApiStageLink: !Sub "https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/${MyApi.StageName}"
+
+
+    InviteStateMachine:
+        Type: AWS::Serverless::StateMachine
+        Properties:
+            Policies:
+                - AWSLambda_FullAccess
+                - AmazonCognitoPowerUser
+            Definition:
+                Comment: Proces registracije člana porodice
+                StartAt: CreateUser
+                States:
+                    CreateUser:
+                        Type: Task
+                        Resource: !GetAtt CreateFamilyFunction.Arn
+                        Next: SendNotification
+                        Parameters:
+                            input_data.$: $
+                        ResultPath: $.in
+
+                    SendNotification:
+                        Type: Task
+                        Resource: !GetAtt SendInviteFunction.Arn
+                        Next: WaitForVerification
+
+                    WaitForVerification:
+                        Type: Wait
+                        Seconds: 300
+                        Next: VerifyUser
+                        InputPath: $.in
+
+                    VerifyUser:
+                        Type: Task
+                        Resource: !GetAtt VerifyFamilyFunction.Arn
+                        End: true
+
+
+    CreateFamilyFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: invite/
+            Handler: create_family_user.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonCognitoPowerUser
+            Environment:
+                Variables:
+                    UserPoolId: !Ref PhotoAlbumUsersPool
+
+    SendInviteFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: invite/
+            Handler: invite_family_member.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonSESFullAccess
+                - AmazonCognitoPowerUser
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    UserPoolId: !Ref PhotoAlbumUsersPool
+                    FamilyTableName: !Ref FamilyTable
+
+
+    VerifyFamilyFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: invite/
+            Handler: invite_family_member.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonCognitoPowerUser
+                - AmazonDynamoDBFullAccess
+            Environment:
+                Variables:
+                    UserPoolId: !Ref PhotoAlbumUsersPool
+                    FamilyTableName: !Ref FamilyTable
+
+
+
+    #API helper functions
+
+    InviteFamilyFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: invite
+            Handler: invite_family_member.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AWSLambdaBasicExecutionRole
+                - AmazonDynamoDBFullAccess
+                - AmazonSESFullAccess
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /invite
+                        Method: POST
+                        RestApiId: !Ref MyApi
+            Environment:
+                Variables:
+                    FamilyTableName: !Ref FamilyTable
+
+
+
+
+
+    ValidateRegistrationFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: invite
+            Handler: validate_registration.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonDynamoDBFullAccess
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+                - AmazonCognitoPowerUser
+                - AWSStepFunctionsFullAccess
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /invite/register
+                        Method: POST
+                        RestApiId: !Ref MyApi
+                        Auth:
+                            Authorizer: NONE
+            Environment:
+                Variables:
+                    FamilyTableName: !Ref FamilyTable
+                    UserPoolId: !Ref PhotoAlbumUsersPool
+                    StateMachine: !GetAtt InviteStateMachine.Arn
+
+
+    UpdateFamilyVerificationFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: invite
+            Handler: update_family_member_verification.lambda_handler
+            Runtime: python3.9
+            Architectures:
+                - x86_64
+            Policies:
+                - AmazonDynamoDBFullAccess
+                - AmazonS3FullAccess
+                - AWSLambdaBasicExecutionRole
+                - AmazonCognitoPowerUser
+                - AWSStepFunctionsFullAccess
+            Events:
+                ApiEvent:
+                    Type: Api
+                    Properties:
+                        Path: /invite/verify
+                        Method: GET
+                        RestApiId: !Ref MyApi
+                        Auth:
+                            Authorizer: NONE
+                        RequestParameters:
+                            -   method.request.querystring.inviteId:
+                                    Required: true
+                            -   method.request.querystring.username:
+                                    Required: true
+                            -   method.request.querystring.inviter:
+                                    Required: true
+            Environment:
+                Variables:
+                    FamilyTableName: !Ref FamilyTable
+                    BucketName: !Ref PhotoBucket
+                    UserPoolId: !Ref PhotoAlbumUsersPool
+                    SharingTableName: !Ref SharingTable
+
+
+
+
+
     DeleteStateMachine:
         Type: AWS::Serverless::StateMachine
         Properties:
@@ -770,81 +980,81 @@ Resources:
                     ParallelState:
                         Type: Parallel
                         Branches:
-                            - StartAt: S3_delete
-                              States:
-                                  S3_delete:
-                                      Type: Task
-                                      Resource: !GetAtt DeleteFileFunction.Arn
-                                      ResultPath: $.BranchResult
-                                      TimeoutSeconds: 3
-                                      Catch:
-                                          - ErrorEquals:
-                                                - States.Timeout
-                                            ResultPath: $.BranchResult
-                                            Next: HandleTimeoutS3
-                                      End: true
-                                  HandleTimeoutS3:
-                                      Type: Pass
-                                      Result: S3 deletion timed out
-                                      End: true
-                            - StartAt: Dynamo_delete
-                              States:
-                                  Dynamo_delete:
-                                      Type: Task
-                                      Resource: !GetAtt DeleteFileMetadataFunction.Arn
-                                      ResultPath: $.BranchResult
-                                      TimeoutSeconds: 3
-                                      Catch:
-                                          - ErrorEquals:
-                                                - States.Timeout
-                                            ResultPath: $.BranchResult
-                                            Next: HandleTimeoutDynamo
-                                      End: true
-                                  HandleTimeoutDynamo:
-                                      Type: Pass
-                                      Result: Dynamo deletion timed out
-                                      End: true
+                            -   StartAt: S3_delete
+                                States:
+                                    S3_delete:
+                                        Type: Task
+                                        Resource: !GetAtt DeleteFileFunction.Arn
+                                        ResultPath: $.BranchResult
+                                        TimeoutSeconds: 3
+                                        Catch:
+                                            -   ErrorEquals:
+                                                    - States.Timeout
+                                                ResultPath: $.BranchResult
+                                                Next: HandleTimeoutS3
+                                        End: true
+                                    HandleTimeoutS3:
+                                        Type: Pass
+                                        Result: S3 deletion timed out
+                                        End: true
+                            -   StartAt: Dynamo_delete
+                                States:
+                                    Dynamo_delete:
+                                        Type: Task
+                                        Resource: !GetAtt DeleteFileMetadataFunction.Arn
+                                        ResultPath: $.BranchResult
+                                        TimeoutSeconds: 3
+                                        Catch:
+                                            -   ErrorEquals:
+                                                    - States.Timeout
+                                                ResultPath: $.BranchResult
+                                                Next: HandleTimeoutDynamo
+                                        End: true
+                                    HandleTimeoutDynamo:
+                                        Type: Pass
+                                        Result: Dynamo deletion timed out
+                                        End: true
                         ResultPath: $.ParallelResult
                         Next: CheckSuccessState
                     CheckSuccessState:
                         Type: Choice
                         Choices:
-                            - And:
-                                  - Or:
-                                        - Variable: $.ParallelResult[0]
-                                          StringEquals: S3 deletion timed out
-                                        - Variable: $.ParallelResult[0].BranchResult.statusCode
-                                          NumericEquals: 500
-                                  - Or:
-                                        - Variable: $.ParallelResult[1]
-                                          StringEquals: Dynamo deletion timed out
-                                        - Variable: $.ParallelResult[1].BranchResult.statusCode
-                                          NumericEquals: 500
-                              Next: BothFailed
-                            - And:
-                                  - Or:
-                                        - Variable: $.ParallelResult[0]
-                                          StringEquals: S3 deletion timed out
-                                        - Variable: $.ParallelResult[0].BranchResult.statusCode
-                                          NumericEquals: 500
-                                  - Variable: $.ParallelResult[1].BranchResult.statusCode
-                                    NumericEquals: 200
-                              Next: S3Failed
-                            - And:
-                                  - Variable: $.ParallelResult[0].BranchResult.statusCode
-                                    NumericEquals: 200
-                                  - Or:
-                                        - Variable: $.ParallelResult[1]
-                                          StringEquals: Dynamo deletion timed out
-                                        - Variable: $.ParallelResult[1].BranchResult.statusCode
-                                          NumericEquals: 500
-                              Next: DynamoFailed
-                            - And:
-                                  - Variable: $.ParallelResult[0].BranchResult.statusCode
-                                    NumericEquals: 200
-                                  - Variable: $.ParallelResult[1].BranchResult.statusCode
-                                    NumericEquals: 200
-                              Next: ParallelSuccess
+                            -   And:
+                                    -   Or:
+                                            -   Variable: $.ParallelResult[0]
+                                                StringEquals: S3 deletion timed out
+                                            -   Variable: $.ParallelResult[0].BranchResult.statusCode
+                                                NumericEquals: 500
+                                    -   Or:
+                                            -   Variable: $.ParallelResult[1]
+                                                StringEquals: Dynamo deletion timed out
+                                            -   Variable: $.ParallelResult[1].BranchResult.statusCode
+                                                NumericEquals: 500
+                                Next: BothFailed
+                            -   And:
+                                    -   Or:
+                                            -   Variable: $.ParallelResult[0]
+                                                StringEquals: S3 deletion timed out
+                                            -   Variable: $.ParallelResult[0].BranchResult.statusCode
+                                                NumericEquals: 500
+                                    -   Variable: $.ParallelResult[1].BranchResult.statusCode
+                                        NumericEquals: 200
+                                Next: S3Failed
+                            -   And:
+                                    -   Variable: $.ParallelResult[0].BranchResult.statusCode
+                                        NumericEquals: 200
+                                    -   Or:
+                                            -   Variable: $.ParallelResult[1]
+                                                StringEquals: Dynamo deletion timed out
+                                            -   Variable: $.ParallelResult[1].BranchResult.statusCode
+                                                NumericEquals: 500
+                                Next: DynamoFailed
+                            -   And:
+                                    -   Variable: $.ParallelResult[0].BranchResult.statusCode
+                                        NumericEquals: 200
+                                    -   Variable: $.ParallelResult[1].BranchResult.statusCode
+                                        NumericEquals: 200
+                                Next: ParallelSuccess
                         Default: BothFailed
                     ParallelSuccess:
                         Type: Task
@@ -978,7 +1188,7 @@ Resources:
                     Type: SNS
                     Properties:
                         Topic: !Ref FileDeleteTopic
-#end
+    #end
 
     ApplicationResourceGroup:
         Type: AWS::ResourceGroups::Group
