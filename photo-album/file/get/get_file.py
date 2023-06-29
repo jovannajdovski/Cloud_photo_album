@@ -16,13 +16,15 @@ def lambda_handler(event, context):
         files = []
         for item in items:
             file_path = item['id']
-            if file_path.startswith(prefix) and prefix.count('/') == occurrencesPrefix:
+            if file_path.startswith(prefix) and file_path.count('/') == occurrencesPrefix:
                 date = item['editTime']
                 parts = file_path.split('/')
                 file_name = parts[-1]
                 files.append({"name": file_name, "updated": date})
 
-        sorted_files = sorted(files, key=lambda x: x["updated"])
+        sorted_files = sorted(files, key=lambda x: str(x["updated"]))
+        for file in sorted_files:
+            file["updated"] = str(file["updated"])
         print(sorted_files)
         return {
             'statusCode': 200,

@@ -85,8 +85,8 @@ export class HomeComponent implements OnInit {
               console.log(result);
               this.files = [];
               if (result.length !== 0) {
-                result.forEach((file: {name:string, updated:Date}) => {
-                  this.files.push({name:file.name, "updated":file.updated, readonly:false, path:""});
+                result.forEach((file: {name:string, updated:string}) => {
+                  this.files.push({name:file.name, "updated": new Date(parseInt(file.updated,10)*1000), readonly:false, path:""});
                 });
               }
 
@@ -203,8 +203,8 @@ export class HomeComponent implements OnInit {
                 next: (result: any) => {
                   console.log(result);
                   if (result.length == 1) {
-                    result.forEach((file: {name:string, updated:Date}) => {
-                      this.files.push({name:fileName, "updated":file.updated, readonly:true, path:content});
+                    result.forEach((file: {name:string, updated:string}) => {
+                      this.files.push({name:fileName, "updated": new Date(parseInt(file.updated,10)*1000), readonly:true, path:content});
                     });
                   }
 
@@ -249,8 +249,8 @@ export class HomeComponent implements OnInit {
         console.log(result);
         this.files = [];
         if (result.length !== 0) {
-          result.forEach((file: {name:string, updated:Date}) => {
-            this.files.push({name:file.name, "updated":file.updated, readonly:true, path:sharedAlbumPath+file.name});
+          result.forEach((file: {name:string, updated:string}) => {
+            this.files.push({name:file.name, "updated": new Date(parseInt(file.updated,10)*1000), readonly:true, path:sharedAlbumPath+file.name});
           });
         }
 
@@ -286,8 +286,8 @@ export class HomeComponent implements OnInit {
         console.log(result);
         this.files = [];
         if (result.length !== 0) {
-          result.forEach((file: {name:string, updated:Date}) => {
-            this.files.push({name:file.name, "updated":file.updated, readonly:false, path:''});
+          result.forEach((file: {name:string, updated:string}) => {
+            this.files.push({name:file.name, "updated": new Date(parseInt(file.updated,10)*1000), readonly:false, path:''});
           });
         }
 
@@ -486,7 +486,7 @@ export class HomeComponent implements OnInit {
     (await this.downloadService.sendToApiGateway(file_path)).subscribe({
       next: (result) => {
         console.log('primio')
-        /*const data = result; // Assuming 'result' contains the file data
+        const data = result; // Assuming 'result' contains the file data
 
         const blob = new Blob([data], { type: 'application/octet-stream' });
 
@@ -500,8 +500,8 @@ export class HomeComponent implements OnInit {
         link.download = lastPart; // Set the desired filename and extension
         link.click();
 
-        URL.revokeObjectURL(url);*/
-        const fileData = result; // Assuming 'result' contains the file data
+        URL.revokeObjectURL(url);
+        /*const fileData = result; // Assuming 'result' contains the file data
         console.log(fileData);
         const zip = new JSZip();
         zip.file(file.name, fileData); // Add the file to the ZIP archive
@@ -512,7 +512,7 @@ export class HomeComponent implements OnInit {
             downloadLink.href = URL.createObjectURL(content);
             downloadLink.download = 'archive.zip'; // Specify the desired file name with the .zip extension
             downloadLink.click();
-    });
+    });*/
       },
       error: (error) => {
         console.error(error);

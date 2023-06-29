@@ -1,6 +1,6 @@
 import json
 import os
-
+from datetime import datetime
 import boto3
 import time
 
@@ -28,12 +28,12 @@ def lambda_handler(event, context):
             'name': str(shortName),
             'type': str(content_type),
             'size': int(message['size']),
-            'createTime': str(message['createTime']),
-            'editTime': str(message['editTime']),
+            'createTime': int(datetime.now().timestamp()),
+            'editTime': int(datetime.now().timestamp()),
             'description': str(message['description']),
             'tag': str(message['tag']),
         }
-
+        print("Item", item)
         response = table.put_item(
             Item=item
         )
@@ -44,6 +44,7 @@ def lambda_handler(event, context):
             'file_path': item['id']
         }
     except Exception as e:
+        print(e)
         return {
             'statusCode': 500,
             'body': f'Error uploading file: {str(e)}'
