@@ -25,7 +25,7 @@ export class ReadService {
     const params = new HttpParams()
     .set('prefix', prefix);
 
-    return this.httpClient.get('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/file',{headers:header,params: params});
+    return this.httpClient.get('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/file',{headers:header,params: params});
 
   }
 }

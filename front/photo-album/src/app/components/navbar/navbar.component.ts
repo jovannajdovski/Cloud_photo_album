@@ -6,6 +6,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AlbumService } from 'src/app/services/album.service';
 import { AlbumNameDialogComponent } from '../album-name-dialog/album-name-dialog.component';
+import { InviteService } from 'src/app/services/invite.service';
+import { InviteFamilyMemberDialogComponent } from '../invite-family-member-dialog/invite-family-member-dialog.component';
 
 @Component({
   selector: 'app-navbar',
@@ -20,7 +22,8 @@ export class NavbarComponent implements OnInit {
      private cognitoService: CognitoService,
      private _snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private albumService: AlbumService) { }
+    private albumService: AlbumService,
+    private inviteService: InviteService) { }
 
   ngOnInit(): void {
     this.cognitoService.userState$.subscribe((result) => {
@@ -77,21 +80,66 @@ export class NavbarComponent implements OnInit {
     
         dialogRef.afterClosed().subscribe((newAlbum: string) => {
           console.log(newAlbum);
-          this.albumService.createAlbum(newAlbumPrefix, newAlbum).subscribe({
-            next: (result : string[]) => {
-              console.log(result);
-              this.openSnackBar("Album successfully created");
-            },
-            error: (error) => {
-              console.error(error);
-            },
-          });
-    
+          if (newAlbum!==undefined){
+            this.albumService.createAlbum(newAlbumPrefix, newAlbum).subscribe({
+              next: (result : string[]) => {
+                console.log(result);
+                this.openSnackBar("Album successfully created");
+              },
+              error: (error) => {
+                console.error(error);
+              },
+            });
+          }
+ 
         });
 
       }
     });
 
    
+  }
+
+
+  public inviteFamilyMember() {
+    this.openInviteFamilyMemberDialog();
+  }
+
+  openInviteFamilyMemberDialog() {
+    this.cognitoService.getUser()
+    .then((user:any) => {
+      if(user){
+        
+        const dialogRef = this.dialog.open(InviteFamilyMemberDialogComponent, {
+          width: '470px',
+          height: '300px'
+        });
+    
+        dialogRef.afterClosed().subscribe((invitedUser: string) => {
+          console.log(invitedUser);
+          if (invitedUser!==undefined){
+            let sender = user.username;
+            this.inviteService.inviteFamilyMember(sender, invitedUser).subscribe({
+              next: (result : any) => {
+                console.log(result);
+                if (result.statusCode==200){
+                  this.openSnackBar(invitedUser+ " invited successfully");
+                } else {
+                  this.openSnackBar("Error while sending invitation, potentially invalid email");
+                }
+                
+              },
+              error: (error) => {
+                console.error(error);
+              },
+            });
+          }
+          
+    
+        });
+
+
+      }
+    });
   }
 }

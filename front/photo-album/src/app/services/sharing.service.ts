@@ -23,7 +23,7 @@ export class SharingService {
       "new_sharing_content":newSharingContent,
     };
 
-    return this.httpClient.post('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/sharing',sharedContent,{headers:header});
+    return this.httpClient.post('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/sharing',sharedContent,{headers:header});
 
   }
 
@@ -38,7 +38,7 @@ export class SharingService {
     .set('user', user)
     .set('shared_content_to_remove', sharedContentToRemove);
 
-    return this.httpClient.delete('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/sharing',{headers:header, params});
+    return this.httpClient.delete('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/sharing',{headers:header, params});
 
   }
 
@@ -52,7 +52,7 @@ export class SharingService {
     const params = new HttpParams()
     .set('content', content);
 
-    return this.httpClient.get<string[]>('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/sharing/users',{headers:header,params: params});
+    return this.httpClient.get<string[]>('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/sharing/users',{headers:header,params: params});
 
   }
 
@@ -66,7 +66,7 @@ export class SharingService {
     const params = new HttpParams()
     .set('user', user);
 
-    return this.httpClient.get<string[]>('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/sharing',{headers:header,params: params});
+    return this.httpClient.get<string[]>('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/sharing',{headers:header,params: params});
 
   }
 }

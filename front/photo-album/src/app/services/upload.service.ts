@@ -25,7 +25,7 @@ export class UploadService {
       'Authorization': token,
     });
 
-    return this.httpClient.post('https://6ai4863jdd.execute-api.eu-central-1.amazonaws.com/Dev/file',file,{headers:header});
+    return this.httpClient.post('https://ib0246trij.execute-api.eu-central-1.amazonaws.com/Dev/file',file,{headers:header});
 
   }
 

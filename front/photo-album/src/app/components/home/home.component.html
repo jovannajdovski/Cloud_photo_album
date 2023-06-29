@@ -15,7 +15,7 @@
         <div class="item">
           <mat-icon class="item-info icon-size">folder</mat-icon>
           <div class="item-info">
-            <div>{{album}}</div>
+            <div>{{album.name}}</div>
             <!-- <div class="item-date">{{album.updated | date}}</div> -->
           </div>
         </div>
@@ -31,31 +31,23 @@
             <mat-icon>visibility</mat-icon>
             <span>View Content</span>
           </button>
-          <button mat-menu-item>
-            <mat-icon>edit</mat-icon>
-            <span>Edit</span>
-          </button>
-          <button mat-menu-item (click)="shareContent(album,true)">
+          <button mat-menu-item (click)="shareContent(album.name,true)" [disabled]="album.readonly || album.initial">
             <mat-icon>leak_add</mat-icon>
             <span>Share</span>
           </button>
-          <button mat-menu-item (click)="removeSharedContent(album,true)">
+          <button mat-menu-item (click)="removeSharedContent(album.name,true)" [disabled]="album.readonly || album.initial">
             <mat-icon>leak_remove</mat-icon>
             <span>Stop Sharing</span>
           </button>
-          <button mat-menu-item (click)="deleteAlbum(album)">
+          <button mat-menu-item (click)="deleteAlbum(album.name)" [disabled]="album.readonly || album.initial">
             <mat-icon>delete</mat-icon>
             <span>Remove</span>
           </button>
-          <button mat-menu-item>
-            <mat-icon>get_app</mat-icon>
-            <span>Download</span>
-          </button>
-          <button mat-menu-item (click)="addContentToAlbum(album)">
+          <button mat-menu-item (click)="addContentToAlbum(album.name)" [disabled]="album.readonly">
             <mat-icon>add_circle</mat-icon>
             <span>Add new content</span>
           </button>
-          <button mat-menu-item (click)="createAlbum(album)">
+          <button mat-menu-item (click)="createAlbum(album.name)" [disabled]="album.readonly">
             <mat-icon>create_new_folder</mat-icon>
             <span>Add new album</span>
           </button>
@@ -85,27 +77,20 @@
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #menuAlbum="matMenu">
-          <button mat-menu-item>
-            <mat-icon>visibility</mat-icon>
-            <span>View Content</span>
-          </button>
-          <button (click)="edit_file(file)" mat-menu-item>
+          
+          <button (click)="edit_file(file)" mat-menu-item [disabled]="file.readonly">
             <mat-icon>edit</mat-icon>
             <span>Edit</span>
           </button>
-          <button mat-menu-item (click)="shareContent(file.name,false)">
+          <button mat-menu-item (click)="shareContent(file.name,false)" [disabled]="file.readonly">
             <mat-icon>leak_add</mat-icon>
             <span>Share</span>
           </button>
-          <button mat-menu-item (click)="removeSharedContent(file.name,false)">
+          <button mat-menu-item (click)="removeSharedContent(file.name,false)" [disabled]="file.readonly">
             <mat-icon>leak_remove</mat-icon>
             <span>Stop Sharing</span>
           </button>
-          <button mat-menu-item>
-            <mat-icon>redo</mat-icon>
-            <span>Move to other album</span>
-          </button>
-          <button (click)="remove_file(file)" mat-menu-item>
+          <button (click)="remove_file(file)" mat-menu-item [disabled]="file.readonly">
             <mat-icon>delete</mat-icon>
             <span>Remove</span>
           </button>

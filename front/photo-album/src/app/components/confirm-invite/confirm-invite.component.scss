@@ -1,0 +1,80 @@
+#background {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+}
+
+#container {
+    box-sizing: border-box;
+    position: absolute;
+    width: 600px;
+    height: 80%;
+    margin-top: 120px;
+    background: #ffffff;
+    border: 3px solid rgb(2, 168, 77);
+    box-shadow: 0px 0px 100px 150px rgba(0, 255, 157, 0.3);
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    font-weight: 400;
+    font-size: 16px;
+    color: #333333;
+}
+
+.holder{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#mail-icon{
+    color: #FFFFFF;
+    font-size: 120px;
+}
+
+#mail-icon-error{
+    color: rgb(255, 58, 58);
+    font-size: 120px;
+}
+
+h1 {
+    font-weight: 500;
+    font-size: 42px;
+    line-height: 82px;
+    letter-spacing: 0.1px;
+    width: 70%;
+    line-height: 60px;
+    text-align: center;
+    margin: 5px 40px;
+    /* margin-bottom: auto; */
+}
+
+h3{
+    font-weight: 300;
+    font-size: 20px;
+    letter-spacing: 0.1px;
+    margin: 80px;
+    margin-bottom: 20%;
+    margin-top: 10%;
+}
+
+.signup-error {
+    color: rgb(253, 51, 51);
+    font-size: 0.8rem;
+    position: relative;
+    top: 0.5rem;
+}
+
+.invalid{
+    color: rgb(255, 61, 61);
+}

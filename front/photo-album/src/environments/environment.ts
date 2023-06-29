@@ -7,12 +7,12 @@ export const environment = {
   cognito: {
     // userPoolId: 'eu-central-1_64goN6Ndnc',
     // userPoolWebClientId : '1du0ehpveg5ksb7902704dhv0'
-    userPoolId: 'eu-central-1_wppwh3pqS',
-    userPoolWebClientId : '4jcibb10fi8mblsab39b36blaq'
+    userPoolId: 'eu-central-1_rPNYL7p2k',
+    userPoolWebClientId : '7lg2slk56985l3gaskihhoub20'
   },
   poolData : {
-    UserPoolId: 'eu-central-1_wppwh3pqS', // Your user pool id here
-    ClientId: '4jcibb10fi8mblsab39b36blaq' // Your client id here
+    UserPoolId: 'eu-central-1_rPNYL7p2k', // Your user pool id here
+    ClientId: '7lg2slk56985l3gaskihhoub20' // Your client id here
   }
 };
 

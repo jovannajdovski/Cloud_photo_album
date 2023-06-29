@@ -41,8 +41,9 @@ export class AddContentDialogComponent implements OnInit {
         const file = target.files[0];
         this.fileName=file.name.split("\\").pop()
         
+        const lastIndex = (this.fileName||"ime.png").lastIndexOf('.');
+        this.type = (this.fileName||"ime.png").substring(lastIndex + 1);
         
-        this.type=(this.fileName||"ime").split('.')[1]||"";
         this.size=file.size;
         this.createTime=Date.now();
         this.editTime=this.createTime;
